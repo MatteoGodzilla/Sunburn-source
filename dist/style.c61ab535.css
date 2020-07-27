@@ -1,0 +1,53 @@
+* {
+	margin: 0px;
+	padding: 0px;
+	border: 0px;
+	overflow: hidden;
+}
+
+label {
+	font-family: Arial, Helvetica, sans-serif;
+	color: white;
+	text-align: center;
+	width: 100%;
+	display: block;
+}
+
+table {
+	width: 100%;
+}
+
+.btn {
+	background-color: darkgray;
+	border-radius: 10px;
+}
+
+.img {
+	width: 80px;
+	height: 80px;
+}
+
+.selected {
+	background: darkorange;
+}
+
+.separator {
+	height: 5px;
+	background-color: gray;
+	border-top-width: 8px;
+	border-bottom-width: 8px;
+	border-color: darkgray;
+	border-style: solid;
+}
+
+#divMain {
+	position: absolute;
+	left: 10px;
+	top: 10px;
+	background-color: darkgray;
+	border-radius: 10px;
+	padding: 10px;
+}
+
+
+/*# sourceMappingURL=/style.c61ab535.css.map */
