@@ -4,6 +4,7 @@ import { NoteRender } from "./NoteRender"
 import { Howl } from "howler"
 import { NoteLoader } from "./noteLoader"
 import { NoteExporter } from "./NoteExporter"
+import { NoteManager } from "./NoteManager"
 
 let app = new PIXI.Application({
 	width: window.innerWidth,
@@ -16,8 +17,15 @@ let inputPos = <HTMLInputElement>document.getElementById("inputPos")
 let inputTimeScale = <HTMLInputElement>document.getElementById("inputTimeScale")
 let inputUIScale = <HTMLInputElement>document.getElementById("inputUIScale")
 
+let inputNoteType = <HTMLInputElement>document.getElementById("inputNoteType")
+let inputNoteTime = <HTMLInputElement>document.getElementById("inputNoteTime")
+let inputNoteLength = <HTMLInputElement>document.getElementById("inputNoteLength")
+
 let notes: noteData[] = []
 let noteRender = new NoteRender(app)
+let noteManager = new NoteManager(app,notes)
+
+let needsRefresh = false
 
 let timeWarp = 1.5
 let songBpm = 120
@@ -34,13 +42,26 @@ app.ticker.add((delta) => {
 		sound.seek(noteRender.time * (240 / songBpm))
 	}
 	noteRender.setTimeScale(timeWarp)
-	noteRender.bpmRender(app)
+	noteRender.bpmRender(app,notes,songBpm)
 	noteRender.draw(app, notes)
+
+	needsRefresh = noteManager.needsRefreshing
+	if(needsRefresh){
+		updateGUI()
+		noteManager.needsRefreshing = false
+	}
 })
 
 window.addEventListener("resize", () => {
 	app.renderer.resize(window.innerWidth, window.innerHeight)
 })
+
+window.addEventListener("mouseup", ev => noteManager.mouseHandler(ev,app,noteRender))
+window.addEventListener("mousemove",ev => noteManager.mouseHandler(ev,app,noteRender))
+
+window.addEventListener("dblclick",ev => ev.preventDefault())
+
+window.addEventListener("contextmenu",ev => ev.preventDefault())
 
 window.addEventListener("wheel", (delta) => noteRender.moveView(-delta.deltaY))
 window.addEventListener("keyup", (ev) => keyPress(ev))
@@ -90,17 +111,6 @@ function keyPress(ev: KeyboardEvent) {
 	}
 }
 
-/*
-document.querySelectorAll(".img").forEach((element) => {
-	element.addEventListener("click", (ev) => {
-		document.querySelectorAll(".img").forEach((image) => {
-			image.classList.remove("selected")
-		})
-		element.classList.add("selected")
-	})
-})
-*/
-
 document.getElementById("inputBPM")?.addEventListener("change", (ev) => {
 	if (ev.srcElement) songBpm = Number((<HTMLInputElement>ev.srcElement).value)
 })
@@ -121,7 +131,11 @@ function updateGUI() {
 	inputBPM.value = songBpm.toFixed(2)
 	inputPos.value = noteRender.time.toFixed(2)
 	inputTimeScale.value = timeWarp.toFixed(2)
-	inputUIScale.value = noteRender.getScale().toFixed(2)
+	inputUIScale.value = noteRender.uiScale.toFixed(2)
+
+	inputNoteType.value = noteManager.selectedNote.type.toString()
+	inputNoteTime.value = noteManager.selectedNote.time.toString()
+	inputNoteLength.value = noteManager.selectedNote.length.toString()
 }
 
 updateGUI()

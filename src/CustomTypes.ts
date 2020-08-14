@@ -50,4 +50,5 @@ export interface noteData {
 	lane: number
 	length: number
 	extra: number
+	selected?: boolean
 }

@@ -1,7 +1,5 @@
 import { noteData, noteTypes } from "./CustomTypes"
 
-let crcTable: number[] = []
-
 export class NoteLoader {
 	static parseChart(f: File, arr: noteData[]) {
 		return this.readerPromise(f).then((result) => {
@@ -24,13 +22,35 @@ export class NoteLoader {
 					let bpm = 120
 					let spikeCenter = false
 					let lastNote: noteData = { time: 0, lane: 1, length: 0, type: -1, extra: 0 }
+
+					let lastFakeBPMMeasure = 0
+					let lastFakeBPMTime = 0
+					let lastFakeBPMValue = 120
 					for (let i = 0; i < length; i++) {
 						let bpmTime = this.parseBinaryFloat(buffer, 16 * (i + 1) + 0)
 						let type = this.parseBinaryInt(buffer, 16 * (i + 1) + 4)
 						let length = this.parseBinaryFloat(buffer, 16 * (i + 1) + 8)
 						let extra = this.parseBinaryFloat(buffer, 16 * (i + 1) + 12)
 
-						if (type === noteTypes.BPM) bpm = extra ? extra : 120
+						if (type === noteTypes.BPM) {
+							bpm = extra ? extra : 120
+							lastFakeBPMValue = bpm
+						}
+
+						if(type === noteTypes.BPM_FAKE_DISTANCE && bpmTime != undefined && extra != undefined){
+							let ticks = this.parseBinaryInt(buffer,16 * (i + 1) + 12)
+							extra = ticks ? Math.round(60000000/ticks) : 500000
+
+							let ratio = bpm / lastFakeBPMValue
+							let deltaMeasure = bpmTime - lastFakeBPMMeasure
+							let t = lastFakeBPMTime + deltaMeasure * ratio
+							
+							lastFakeBPMMeasure = bpmTime
+							lastFakeBPMValue = extra
+
+							bpmTime = t
+							lastFakeBPMTime = t
+						}
 
 						if (!spikeCenter && ((type === noteTypes.CF_SPIKE_G && lastNote.type === noteTypes.CF_SPIKE_B) || (type === noteTypes.CF_SPIKE_B && lastNote.type === noteTypes.CF_SPIKE_G))) {
 							spikeCenter = true
