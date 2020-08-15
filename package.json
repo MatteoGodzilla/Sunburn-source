@@ -14,9 +14,9 @@
   "author": "MatteoGodzilla",
   "license": "MIT",
   "devDependencies": {
+    "@types/file-saver": "^2.0.1",
     "@types/howler": "^2.2.1",
     "@types/pixi.js": "^5.0.0",
-    "@types/file-saver": "^2.0.1",
     "prettier": "2.0.5",
     "typescript": "^3.9.5"
   },

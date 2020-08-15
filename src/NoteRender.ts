@@ -23,13 +23,18 @@ for (let v in texID) {
 	textures.push(texID[v])
 }
 
+interface grObject {
+	sprite: PIXI.Sprite
+	graphic: PIXI.Graphics
+}
+
 export class NoteRender {
 	private container: PIXI.Container
 	private bpmContainer: PIXI.Container
 	time = 0
 	uiScale = 100
 	timeScale = 100
-	clickerOffset = 200
+	clickerOffset = 100
 	private crossPosition = 1
 
 	private clickerBaseLeft = new PIXI.Sprite()
@@ -43,8 +48,8 @@ export class NoteRender {
 	private blueGraphic = new PIXI.Graphics()
 
 	private sprites: {
-		sprites: PIXI.Sprite[]
-		count: number
+		objects: grObject[]
+		usedCount: number
 	}[] = []
 
 	private events: {
@@ -217,118 +222,168 @@ export class NoteRender {
 
 				y = y > renderHeight ? renderHeight : y
 
-				let sprite:PIXI.Sprite|undefined = undefined
+				let graphicsObject: grObject | undefined = undefined
 
-				if(note.type === noteTypes.TAP_G || note.type === noteTypes.SCR_G_UP || note.type === noteTypes.SCR_G_DOWN || note.type === noteTypes.SCR_G_ANYDIR){
+				if (note.type === noteTypes.TAP_G || note.type === noteTypes.SCR_G_UP || note.type === noteTypes.SCR_G_DOWN || note.type === noteTypes.SCR_G_ANYDIR) {
 					x -= (note.lane == 0 ? 2 : 1) * this.uiScale
-					sprite = this.getSprite(note.type);
-					sprite.position.set(x, y)
-				} else if(note.type === noteTypes.TAP_R){
-					sprite = this.getSprite(note.type);
-					sprite.position.set(x, y)
-				} else if(note.type === noteTypes.TAP_B || note.type === noteTypes.SCR_B_UP || note.type === noteTypes.SCR_B_DOWN || note.type === noteTypes.SCR_B_ANYDIR){
+					graphicsObject = this.getSprite(note.type)
+					graphicsObject.sprite.position.set(x, y)
+					if (note.length > 0.0625) {
+						//add tail
+						let width = 40
+						let startHeight = renderHeight - ((note.time + note.length - this.time) / this.timeScale) * renderHeight
+
+						graphicsObject.graphic.beginFill(0xffffff, 0.5)
+						graphicsObject.graphic.drawRect(x - width / 2, startHeight, width, y - startHeight)
+					}
+				} else if (note.type === noteTypes.TAP_R) {
+					graphicsObject = this.getSprite(note.type)
+					graphicsObject.sprite.position.set(x, y)
+					if (note.length > 0.0625) {
+						//add tail
+						let width = 40
+						let startHeight = renderHeight - ((note.time + note.length - this.time) / this.timeScale) * renderHeight
+
+						graphicsObject.graphic.beginFill(0xffffff, 0.5)
+						graphicsObject.graphic.drawRect(x - width / 2, startHeight, width, y - startHeight)
+					}
+				} else if (note.type === noteTypes.TAP_B || note.type === noteTypes.SCR_B_UP || note.type === noteTypes.SCR_B_DOWN || note.type === noteTypes.SCR_B_ANYDIR) {
 					x += (note.lane == 2 ? 2 : 1) * this.uiScale
-					sprite = this.getSprite(note.type);
-					sprite.position.set(x, y)
-				} else if(note.type == noteTypes.CF_SPIKE_G){
+					graphicsObject = this.getSprite(note.type)
+					graphicsObject.sprite.position.set(x, y)
+					if (note.length > 0.0625) {
+						//add tail
+						let width = 40
+						let startHeight = renderHeight - ((note.time + note.length - this.time) / this.timeScale) * renderHeight
+
+						graphicsObject.graphic.beginFill(0xffffff, 0.5)
+						graphicsObject.graphic.drawRect(x - width / 2, startHeight, width, y - startHeight)
+					}
+				} else if (note.type == noteTypes.CF_SPIKE_G) {
 					x -= this.uiScale * 1.5
-					sprite = this.getSprite(note.type);
-					sprite.position.set(x, y)
-					sprite.height = this.uiScale / 2
+					graphicsObject = this.getSprite(note.type)
+					graphicsObject.sprite.position.set(x, y)
+					graphicsObject.sprite.height = this.uiScale / 2
 					if (NoteLoader.getCrossAtTime(note.time, arr) == 2) {
 						x += this.uiScale * 3
 						let s = this.getSprite(noteTypes.CF_SPIKE_B)
-						s.position.set(x, y)
-						s.height = this.uiScale / 2
-						s.scale.x = -1 * s.scale.x
+						s.sprite.position.set(x, y)
+						s.sprite.height = this.uiScale / 2
+						s.sprite.scale.x = -1 * s.sprite.scale.x
 					}
-				} else if(note.type === noteTypes.CF_SPIKE_B){
+				} else if (note.type === noteTypes.CF_SPIKE_B) {
 					x += this.uiScale * 1.5
-					sprite = this.getSprite(note.type);
-					sprite.height = this.uiScale / 2
-					sprite.position.set(x, y)
+					graphicsObject = this.getSprite(note.type)
+					graphicsObject.sprite.height = this.uiScale / 2
+					graphicsObject.sprite.position.set(x, y)
 					if (NoteLoader.getCrossAtTime(note.time, arr) == 0) {
 						x -= this.uiScale * 3
 						let s = this.getSprite(noteTypes.CF_SPIKE_G)
-						s.position.set(x, y)
-						s.height = this.uiScale / 2
-						s.scale.x = -1 * s.scale.x
+						s.sprite.position.set(x, y)
+						s.sprite.height = this.uiScale / 2
+						s.sprite.scale.x = -1 * s.sprite.scale.x
 					}
-				} else if(note.type === noteTypes.CF_SPIKE_C){
+				} else if (note.type === noteTypes.CF_SPIKE_C) {
 					if (NoteLoader.getCrossAtTime(note.time, arr) == 0) {
 						x -= this.uiScale * 1.5
-						sprite = this.getSprite(note.type);
-						sprite.height = this.uiScale / 2
-						sprite.position.set(x, y)
-						sprite.scale.x = -1 * sprite.scale.x
+						graphicsObject = this.getSprite(note.type)
+						graphicsObject.sprite.height = this.uiScale / 2
+						graphicsObject.sprite.position.set(x, y)
+						graphicsObject.sprite.scale.x = -1 * graphicsObject.sprite.scale.x
 					} else if (NoteLoader.getCrossAtTime(note.time, arr) == 2) {
 						x += this.uiScale * 1.5
-						sprite = this.getSprite(noteTypes.CF_SPIKE_B)
-						sprite.height = this.uiScale / 2
-						sprite.position.set(x, y)
-						sprite.scale.x = -1 * sprite.scale.x
+						graphicsObject = this.getSprite(noteTypes.CF_SPIKE_B)
+						graphicsObject.sprite.height = this.uiScale / 2
+						graphicsObject.sprite.position.set(x, y)
+						graphicsObject.sprite.scale.x = -1 * graphicsObject.sprite.scale.x
 					}
-				} else if(note.type === noteTypes.BPM || note.type === noteTypes.BPM_FAKE_DISTANCE){
+				} else if (note.type === noteTypes.BPM || note.type === noteTypes.BPM_FAKE) {
 					let ev = this.getEvent()
 					x -= this.uiScale * 4
 
 					//let lengthY = renderHeight - ((note.time + note.length - this.time) / this.timeScale) * renderHeight
 
-					ev.base.position.set(x,y-ev.base.height/2)
+					if (this.eventRenderCount >= 2) {
+						for (let i = 0; i < this.eventRenderCount - 1; ++i) {
+							let after = this.events[i]
+							let afterHeight = after.base.y + after.base.height / 2
+							if (y === afterHeight && after.base.x < app.renderer.width / 2) {
+								this.events[i].base.x -= this.uiScale
+								this.events[i].length.x -= this.uiScale
+								this.events[i].text.x -= this.uiScale
+							}
+						}
+					}
+
+					ev.base.position.set(x, y - ev.base.height / 2)
 
 					//ev.length.position.set(x - (this.uiScale - ev.base.height) / 2, lengthY)
 					//ev.length.height = y - lengthY
 
-					let text = note.extra.toString()
+					let text = note.extra.toFixed(4)
 					/* for(let value in noteTypes){
 						if(Number(value) && value === note.type.toString()) text = noteTypes[value]
 					} */
 					ev.text.text = text
 					ev.text.position.set(x + this.uiScale / 2, y)
-				} else if( note.type !== noteTypes.CROSS_G && note.type !== noteTypes.CROSS_B && note.type !== noteTypes.CROSS_C){
+				} else if (note.type !== noteTypes.CROSS_G && note.type !== noteTypes.CROSS_B && note.type !== noteTypes.CROSS_C) {
 					let ev = this.getEvent()
 					x += this.uiScale * 3
 
-					let lengthY = renderHeight - ((note.time + note.length - this.time) / this.timeScale) * renderHeight
+					let lengthYPos = renderHeight - ((note.time + note.length - this.time) / this.timeScale) * renderHeight
 
-					ev.base.position.set(x,y-ev.base.height/2)
+					if (this.eventRenderCount >= 2) {
+						for (let i = 0; i < this.eventRenderCount - 1; ++i) {
+							let after = this.events[i]
+							let afterHeight = after.base.y + after.base.height / 2
+							if (y >= afterHeight && lengthYPos < afterHeight && after.base.x > app.renderer.width / 2) {
+								this.events[i].base.x += this.uiScale
+								this.events[i].length.x += this.uiScale
+								this.events[i].text.x += this.uiScale
+							}
+						}
+					}
 
-					ev.length.position.set(x + (this.uiScale - ev.base.height) / 2, lengthY)
-					ev.length.height = y - lengthY
+					ev.base.position.set(x, y - ev.base.height / 2)
+
+					ev.length.position.set(x + (this.uiScale - ev.base.height) / 2, lengthYPos)
+					ev.length.height = y - lengthYPos
+
+					//console.log(ev.base.y + ev.base.height/2,ev.base.y + ev.base.height/2 - ev.length.height)
 
 					let text = note.type.toString()
-					for(let value in noteTypes){
-						if(Number(value) && value === note.type.toString()) text = noteTypes[value]
+					for (let value in noteTypes) {
+						if (Number(value) && value === note.type.toString()) text = noteTypes[value]
 					}
 					ev.text.text = text
 					ev.text.position.set(x + this.uiScale / 2, y)
 				}
 
-				if(sprite){
-					if(note.selected){
-						sprite.tint = 0x00ff00
+				if (graphicsObject) {
+					if (note.selected) {
+						graphicsObject.sprite.tint = 0x00ff00
 					}
 				}
 			}
 		}
 	}
 
-	bpmRender(app: PIXI.Application,notes:noteData[],baseBPM:number) {
+	bpmRender(app: PIXI.Application, notes: noteData[], baseBPM: number) {
 		this.bpmContainer.removeChildren()
 		let renderHeight = app.renderer.height - this.clickerOffset
 
-		let resolution = 1/4
+		let resolution = 1 / 4
 
-		for(let t = this.time ; t < this.time + this.timeScale;){
-			let lastBPMChange:noteData = {time:0,type:0,length:0,lane:0,extra:0}
-			for(let n of notes){
-				if((n.type === noteTypes.BPM || n.type === noteTypes.BPM_FAKE_DISTANCE) && n.time <= t) lastBPMChange = n
+		for (let t = this.time; t < this.time + this.timeScale; ) {
+			let lastBPMChange: noteData = { time: 0, type: 0, length: 0, lane: 0, extra: 0 }
+			for (let n of notes) {
+				if ((n.type === noteTypes.BPM || n.type === noteTypes.BPM_FAKE) && n.time <= t) lastBPMChange = n
 			}
-			let tickDelta = resolution * baseBPM / lastBPMChange.extra
-			let closestBeat = Math.ceil((t-lastBPMChange.time) / tickDelta) * tickDelta + lastBPMChange.time
-	
+			let tickDelta = (resolution * baseBPM) / lastBPMChange.extra
+			let closestBeat = Math.ceil((t - lastBPMChange.time) / tickDelta) * tickDelta + lastBPMChange.time
+
 			let y = renderHeight - ((closestBeat - this.time) / this.timeScale) * renderHeight
-	
+
 			let g = new PIXI.Graphics()
 			g.beginFill(0x333333)
 			//if (Math.floor(i) === i) g.beginFill(0x555555)
@@ -371,17 +426,21 @@ export class NoteRender {
 		this.time = val
 	}
 
-	private getSprite(type: noteTypes){
+	private getSprite(type: noteTypes) {
 		if (!this.sprites[type]) {
-			this.sprites[type] = { sprites: [], count: 0 }
+			let collection = {
+				objects: [],
+				usedCount: 0
+			}
+			this.sprites[type] = collection
 		}
 
-		let count = this.sprites[type].count
-		let spriteArr = this.sprites[type].sprites
+		let count = this.sprites[type].usedCount
+		let objects = this.sprites[type].objects
 
-		if (count < spriteArr.length) {
-			let sprite = spriteArr[count]
-			this.sprites[type].count++
+		if (count < objects.length) {
+			this.sprites[type].usedCount++
+			let sprite = objects[count]
 			return sprite
 		} else {
 			let res = PIXI.Loader.shared.resources
@@ -400,31 +459,41 @@ export class NoteRender {
 			sprite.width = this.uiScale
 			sprite.height = this.uiScale
 
-			this.sprites[type].sprites.push(sprite)
-			this.container.addChild(sprite)
-			this.sprites[type].count++
+			let graphic = new PIXI.Graphics()
 
-			return sprite
+			let object: grObject = {
+				sprite: sprite,
+				graphic: graphic
+			}
+
+			this.sprites[type].objects.push(object)
+			this.container.addChild(graphic)
+			this.container.addChild(sprite)
+			this.sprites[type].usedCount++
+
+			return object
 		}
 	}
 
 	private resetSprites() {
-		for (let obj of this.sprites) {
-			if (obj) {
-				obj.sprites.forEach((sprite) => {
-					sprite.position.set(120000, 120000)
-					sprite.width = this.uiScale
-					sprite.height = this.uiScale
-					sprite.tint = 0xffffff
-					if (sprite.scale.x < 0) sprite.scale.x = -1 * sprite.scale.x
+		for (let collection of this.sprites) {
+			if (collection) {
+				collection.objects.forEach((obj) => {
+					obj.sprite.position.set(120000, 120000)
+					obj.sprite.width = this.uiScale
+					obj.sprite.height = this.uiScale
+					obj.sprite.tint = 0xffffff
+					if (obj.sprite.scale.x < 0) obj.sprite.scale.x = -1 * obj.sprite.scale.x
+
+					obj.graphic.clear()
 				})
-				obj.count = 0
+				collection.usedCount = 0
 			}
 		}
 	}
 
-	private getEvent(){
-		if(this.eventRenderCount < this.events.length){
+	private getEvent() {
+		if (this.eventRenderCount < this.events.length) {
 			let graphic = this.events[this.eventRenderCount]
 			this.eventRenderCount++
 			return graphic
@@ -432,34 +501,34 @@ export class NoteRender {
 			let thicc = 20
 			let textStyle = new PIXI.TextStyle({ fontSize: thicc, fill: "white" })
 			let color = 0x333333
-	
+
 			let base = new PIXI.Graphics()
-			let text = new PIXI.Text("RESET",textStyle)
+			let text = new PIXI.Text("RESET", textStyle)
 			let length = new PIXI.Graphics()
-	
+
 			base.beginFill(color)
-			base.drawRect(0,0,this.uiScale,thicc)
-	
-			text.anchor.set(0.5,0.5)
-	
+			base.drawRect(0, 0, this.uiScale, thicc)
+
+			text.anchor.set(0.5, 0.5)
+
 			length.beginFill(color)
-			length.drawRect(0,0,thicc,20)
-	
+			length.drawRect(0, 0, thicc, 20)
+
 			this.container.addChild(base)
 			this.container.addChild(length)
 			this.container.addChild(text)
-			this.events.push({base:base,text:text,length:length})
-			
+			this.events.push({ base: base, text: text, length: length })
+
 			this.eventRenderCount++
-			return {base:base,text:text,length:length}
+			return { base: base, text: text, length: length }
 		}
 	}
 
-	private resetEvents(){
-		for(let ev of this.events){
-			ev.base.position.set(120000,120000)
-			ev.length.position.set(120000,120000)
-			ev.text.position.set(120000,120000)
+	private resetEvents() {
+		for (let ev of this.events) {
+			ev.base.position.set(120000, 120000)
+			ev.length.position.set(120000, 120000)
+			ev.text.position.set(120000, 120000)
 		}
 		this.eventRenderCount = 0
 	}

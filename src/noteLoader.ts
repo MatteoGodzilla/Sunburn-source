@@ -37,14 +37,14 @@ export class NoteLoader {
 							lastFakeBPMValue = bpm
 						}
 
-						if(type === noteTypes.BPM_FAKE_DISTANCE && bpmTime != undefined && extra != undefined){
-							let ticks = this.parseBinaryInt(buffer,16 * (i + 1) + 12)
-							extra = ticks ? Math.round(60000000/ticks) : 500000
+						if (type === noteTypes.BPM_FAKE_DISTANCE && bpmTime != undefined && extra != undefined) {
+							let ticks = this.parseBinaryInt(buffer, 16 * (i + 1) + 12)
+							extra = ticks ? Math.round(60000000 / ticks) : 500000
 
 							let ratio = bpm / lastFakeBPMValue
 							let deltaMeasure = bpmTime - lastFakeBPMMeasure
 							let t = lastFakeBPMTime + deltaMeasure * ratio
-							
+
 							lastFakeBPMMeasure = bpmTime
 							lastFakeBPMValue = extra
 

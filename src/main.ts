@@ -2,7 +2,7 @@ import * as PIXI from "pixi.js"
 import { noteData } from "./CustomTypes"
 import { NoteRender } from "./NoteRender"
 import { Howl } from "howler"
-import { NoteLoader } from "./noteLoader"
+import { NoteLoader } from "./NoteLoader"
 import { NoteExporter } from "./NoteExporter"
 import { NoteManager } from "./NoteManager"
 
@@ -23,7 +23,7 @@ let inputNoteLength = <HTMLInputElement>document.getElementById("inputNoteLength
 
 let notes: noteData[] = []
 let noteRender = new NoteRender(app)
-let noteManager = new NoteManager(app,notes)
+let noteManager = new NoteManager(app, notes)
 
 let needsRefresh = false
 
@@ -42,11 +42,11 @@ app.ticker.add((delta) => {
 		sound.seek(noteRender.time * (240 / songBpm))
 	}
 	noteRender.setTimeScale(timeWarp)
-	noteRender.bpmRender(app,notes,songBpm)
+	noteRender.bpmRender(app, notes, songBpm)
 	noteRender.draw(app, notes)
 
 	needsRefresh = noteManager.needsRefreshing
-	if(needsRefresh){
+	if (needsRefresh) {
 		updateGUI()
 		noteManager.needsRefreshing = false
 	}
@@ -56,12 +56,12 @@ window.addEventListener("resize", () => {
 	app.renderer.resize(window.innerWidth, window.innerHeight)
 })
 
-window.addEventListener("mouseup", ev => noteManager.mouseHandler(ev,app,noteRender))
-window.addEventListener("mousemove",ev => noteManager.mouseHandler(ev,app,noteRender))
+window.addEventListener("mouseup", (ev) => noteManager.mouseHandler(ev, app, noteRender))
+window.addEventListener("mousemove", (ev) => noteManager.mouseHandler(ev, app, noteRender))
 
-window.addEventListener("dblclick",ev => ev.preventDefault())
+window.addEventListener("dblclick", (ev) => ev.preventDefault())
 
-window.addEventListener("contextmenu",ev => ev.preventDefault())
+window.addEventListener("contextmenu", (ev) => ev.preventDefault())
 
 window.addEventListener("wheel", (delta) => noteRender.moveView(-delta.deltaY))
 window.addEventListener("keyup", (ev) => keyPress(ev))

@@ -48747,27 +48747,27 @@ exports.noteTypes = noteTypes;
   noteTypes[noteTypes["SCR_B_ZONE"] = 21] = "SCR_B_ZONE";
   noteTypes[noteTypes["FX_ALL"] = 22] = "FX_ALL";
   noteTypes[noteTypes["CROSS_FORCE_CENTER"] = 23] = "CROSS_FORCE_CENTER";
-  noteTypes[noteTypes["BATTLE_PLAYER_SWITCH"] = 26] = "BATTLE_PLAYER_SWITCH";
+  noteTypes[noteTypes["BATTLE_SWITCH"] = 26] = "BATTLE_SWITCH";
   noteTypes[noteTypes["CF_SPIKE_G"] = 27] = "CF_SPIKE_G";
   noteTypes[noteTypes["CF_SPIKE_B"] = 28] = "CF_SPIKE_B";
   noteTypes[noteTypes["CF_SPIKE_C"] = 29] = "CF_SPIKE_C";
   noteTypes[noteTypes["MEGAMIX_TRANSITION"] = 30] = "MEGAMIX_TRANSITION";
-  noteTypes[noteTypes["FS_CROSS_GREEN_MARKER"] = 31] = "FS_CROSS_GREEN_MARKER";
-  noteTypes[noteTypes["FS_CROSS_BLUE_MARKER"] = 32] = "FS_CROSS_BLUE_MARKER";
-  noteTypes[noteTypes["FX_TYPE_FILTER"] = 100663295] = "FX_TYPE_FILTER";
-  noteTypes[noteTypes["FX_TYPE_BEATROLL"] = 100663296] = "FX_TYPE_BEATROLL";
-  noteTypes[noteTypes["FX_TYPE_BITREDUCTION"] = 100663297] = "FX_TYPE_BITREDUCTION";
-  noteTypes[noteTypes["FX_TYPE_WAHWAH"] = 100663298] = "FX_TYPE_WAHWAH";
-  noteTypes[noteTypes["FX_TYPE_RINGMOD"] = 100663299] = "FX_TYPE_RINGMOD";
-  noteTypes[noteTypes["FX_TYPE_STUTTER"] = 100663300] = "FX_TYPE_STUTTER";
-  noteTypes[noteTypes["FX_TYPE_FLANGER"] = 100663301] = "FX_TYPE_FLANGER";
-  noteTypes[noteTypes["FX_TYPE_ROBOT"] = 100663302] = "FX_TYPE_ROBOT";
-  noteTypes[noteTypes["FX_TYPE_BEATROLLAUTO"] = 100663303] = "FX_TYPE_BEATROLLAUTO";
-  noteTypes[noteTypes["FX_TYPE_DELAY"] = 1610612745] = "FX_TYPE_DELAY";
-  noteTypes[noteTypes["STRING_DATA"] = 2952790015] = "STRING_DATA";
-  noteTypes[noteTypes["BPM_FAKE_DISTANCE"] = 184549377] = "BPM_FAKE_DISTANCE";
+  noteTypes[noteTypes["FS_CF_G_MARKER"] = 31] = "FS_CF_G_MARKER";
+  noteTypes[noteTypes["FS_CF_B_MARKER"] = 32] = "FS_CF_B_MARKER";
+  noteTypes[noteTypes["FX_FILTER"] = 100663295] = "FX_FILTER";
+  noteTypes[noteTypes["FX_BEATROLL"] = 100663296] = "FX_BEATROLL";
+  noteTypes[noteTypes["FX_BITREDUCTION"] = 100663297] = "FX_BITREDUCTION";
+  noteTypes[noteTypes["FX_WAHWAH"] = 100663298] = "FX_WAHWAH";
+  noteTypes[noteTypes["FX_RINGMOD"] = 100663299] = "FX_RINGMOD";
+  noteTypes[noteTypes["FX_STUTTER"] = 100663300] = "FX_STUTTER";
+  noteTypes[noteTypes["FX_FLANGER"] = 100663301] = "FX_FLANGER";
+  noteTypes[noteTypes["FX_ROBOT"] = 100663302] = "FX_ROBOT";
+  noteTypes[noteTypes["FX_BEATROLLAUTO"] = 100663303] = "FX_BEATROLLAUTO";
+  noteTypes[noteTypes["FX_DELAY"] = 1610612745] = "FX_DELAY";
+  noteTypes[noteTypes["STRING"] = 184549375] = "STRING";
+  noteTypes[noteTypes["BPM_FAKE"] = 184549377] = "BPM_FAKE";
   noteTypes[noteTypes["BPM"] = 184549378] = "BPM";
-  noteTypes[noteTypes["REWIND_CHECKPOINT"] = 167772159] = "REWIND_CHECKPOINT";
+  noteTypes[noteTypes["REWIND"] = 167772159] = "REWIND";
 })(noteTypes || (exports.noteTypes = noteTypes = {}));
 },{}],"src/NoteLoader.ts":[function(require,module,exports) {
 "use strict";
@@ -49049,7 +49049,7 @@ var NoteRender = /*#__PURE__*/function () {
     this.time = 0;
     this.uiScale = 100;
     this.timeScale = 100;
-    this.clickerOffset = 200;
+    this.clickerOffset = 100;
     this.crossPosition = 1;
     this.clickerBaseLeft = new PIXI.Sprite();
     this.clickerBaseRight = new PIXI.Sprite();
@@ -49242,70 +49242,111 @@ var NoteRender = /*#__PURE__*/function () {
           var _y = renderHeight - (note.time - this.time) / this.timeScale * renderHeight;
 
           _y = _y > renderHeight ? renderHeight : _y;
-          var sprite = undefined;
+          var graphicsObject = undefined;
 
           if (note.type === _CustomTypes.noteTypes.TAP_G || note.type === _CustomTypes.noteTypes.SCR_G_UP || note.type === _CustomTypes.noteTypes.SCR_G_DOWN || note.type === _CustomTypes.noteTypes.SCR_G_ANYDIR) {
             x -= (note.lane == 0 ? 2 : 1) * this.uiScale;
-            sprite = this.getSprite(note.type);
-            sprite.position.set(x, _y);
+            graphicsObject = this.getSprite(note.type);
+            graphicsObject.sprite.position.set(x, _y);
+
+            if (note.length > 0.0625) {
+              //add tail
+              var width = 40;
+              var startHeight = renderHeight - (note.time + note.length - this.time) / this.timeScale * renderHeight;
+              graphicsObject.graphic.beginFill(0xffffff, 0.5);
+              graphicsObject.graphic.drawRect(x - width / 2, startHeight, width, _y - startHeight);
+            }
           } else if (note.type === _CustomTypes.noteTypes.TAP_R) {
-            sprite = this.getSprite(note.type);
-            sprite.position.set(x, _y);
+            graphicsObject = this.getSprite(note.type);
+            graphicsObject.sprite.position.set(x, _y);
+
+            if (note.length > 0.0625) {
+              //add tail
+              var _width = 40;
+
+              var _startHeight = renderHeight - (note.time + note.length - this.time) / this.timeScale * renderHeight;
+
+              graphicsObject.graphic.beginFill(0xffffff, 0.5);
+              graphicsObject.graphic.drawRect(x - _width / 2, _startHeight, _width, _y - _startHeight);
+            }
           } else if (note.type === _CustomTypes.noteTypes.TAP_B || note.type === _CustomTypes.noteTypes.SCR_B_UP || note.type === _CustomTypes.noteTypes.SCR_B_DOWN || note.type === _CustomTypes.noteTypes.SCR_B_ANYDIR) {
             x += (note.lane == 2 ? 2 : 1) * this.uiScale;
-            sprite = this.getSprite(note.type);
-            sprite.position.set(x, _y);
+            graphicsObject = this.getSprite(note.type);
+            graphicsObject.sprite.position.set(x, _y);
+
+            if (note.length > 0.0625) {
+              //add tail
+              var _width2 = 40;
+
+              var _startHeight2 = renderHeight - (note.time + note.length - this.time) / this.timeScale * renderHeight;
+
+              graphicsObject.graphic.beginFill(0xffffff, 0.5);
+              graphicsObject.graphic.drawRect(x - _width2 / 2, _startHeight2, _width2, _y - _startHeight2);
+            }
           } else if (note.type == _CustomTypes.noteTypes.CF_SPIKE_G) {
             x -= this.uiScale * 1.5;
-            sprite = this.getSprite(note.type);
-            sprite.position.set(x, _y);
-            sprite.height = this.uiScale / 2;
+            graphicsObject = this.getSprite(note.type);
+            graphicsObject.sprite.position.set(x, _y);
+            graphicsObject.sprite.height = this.uiScale / 2;
 
             if (_NoteLoader.NoteLoader.getCrossAtTime(note.time, arr) == 2) {
               x += this.uiScale * 3;
               var s = this.getSprite(_CustomTypes.noteTypes.CF_SPIKE_B);
-              s.position.set(x, _y);
-              s.height = this.uiScale / 2;
-              s.scale.x = -1 * s.scale.x;
+              s.sprite.position.set(x, _y);
+              s.sprite.height = this.uiScale / 2;
+              s.sprite.scale.x = -1 * s.sprite.scale.x;
             }
           } else if (note.type === _CustomTypes.noteTypes.CF_SPIKE_B) {
             x += this.uiScale * 1.5;
-            sprite = this.getSprite(note.type);
-            sprite.height = this.uiScale / 2;
-            sprite.position.set(x, _y);
+            graphicsObject = this.getSprite(note.type);
+            graphicsObject.sprite.height = this.uiScale / 2;
+            graphicsObject.sprite.position.set(x, _y);
 
             if (_NoteLoader.NoteLoader.getCrossAtTime(note.time, arr) == 0) {
               x -= this.uiScale * 3;
 
               var _s = this.getSprite(_CustomTypes.noteTypes.CF_SPIKE_G);
 
-              _s.position.set(x, _y);
+              _s.sprite.position.set(x, _y);
 
-              _s.height = this.uiScale / 2;
-              _s.scale.x = -1 * _s.scale.x;
+              _s.sprite.height = this.uiScale / 2;
+              _s.sprite.scale.x = -1 * _s.sprite.scale.x;
             }
           } else if (note.type === _CustomTypes.noteTypes.CF_SPIKE_C) {
             if (_NoteLoader.NoteLoader.getCrossAtTime(note.time, arr) == 0) {
               x -= this.uiScale * 1.5;
-              sprite = this.getSprite(note.type);
-              sprite.height = this.uiScale / 2;
-              sprite.position.set(x, _y);
-              sprite.scale.x = -1 * sprite.scale.x;
+              graphicsObject = this.getSprite(note.type);
+              graphicsObject.sprite.height = this.uiScale / 2;
+              graphicsObject.sprite.position.set(x, _y);
+              graphicsObject.sprite.scale.x = -1 * graphicsObject.sprite.scale.x;
             } else if (_NoteLoader.NoteLoader.getCrossAtTime(note.time, arr) == 2) {
               x += this.uiScale * 1.5;
-              sprite = this.getSprite(_CustomTypes.noteTypes.CF_SPIKE_B);
-              sprite.height = this.uiScale / 2;
-              sprite.position.set(x, _y);
-              sprite.scale.x = -1 * sprite.scale.x;
+              graphicsObject = this.getSprite(_CustomTypes.noteTypes.CF_SPIKE_B);
+              graphicsObject.sprite.height = this.uiScale / 2;
+              graphicsObject.sprite.position.set(x, _y);
+              graphicsObject.sprite.scale.x = -1 * graphicsObject.sprite.scale.x;
             }
-          } else if (note.type === _CustomTypes.noteTypes.BPM || note.type === _CustomTypes.noteTypes.BPM_FAKE_DISTANCE) {
+          } else if (note.type === _CustomTypes.noteTypes.BPM || note.type === _CustomTypes.noteTypes.BPM_FAKE) {
             var ev = this.getEvent();
             x -= this.uiScale * 4; //let lengthY = renderHeight - ((note.time + note.length - this.time) / this.timeScale) * renderHeight
+
+            if (this.eventRenderCount >= 2) {
+              for (var _i = 0; _i < this.eventRenderCount - 1; ++_i) {
+                var after = this.events[_i];
+                var afterHeight = after.base.y + after.base.height / 2;
+
+                if (_y === afterHeight && after.base.x < app.renderer.width / 2) {
+                  this.events[_i].base.x -= this.uiScale;
+                  this.events[_i].length.x -= this.uiScale;
+                  this.events[_i].text.x -= this.uiScale;
+                }
+              }
+            }
 
             ev.base.position.set(x, _y - ev.base.height / 2); //ev.length.position.set(x - (this.uiScale - ev.base.height) / 2, lengthY)
             //ev.length.height = y - lengthY
 
-            var text = note.extra.toString();
+            var text = note.extra.toFixed(4);
             /* for(let value in noteTypes){
                 if(Number(value) && value === note.type.toString()) text = noteTypes[value]
             } */
@@ -49316,13 +49357,27 @@ var NoteRender = /*#__PURE__*/function () {
             var _ev = this.getEvent();
 
             x += this.uiScale * 3;
-            var lengthY = renderHeight - (note.time + note.length - this.time) / this.timeScale * renderHeight;
+            var lengthYPos = renderHeight - (note.time + note.length - this.time) / this.timeScale * renderHeight;
+
+            if (this.eventRenderCount >= 2) {
+              for (var _i2 = 0; _i2 < this.eventRenderCount - 1; ++_i2) {
+                var _after = this.events[_i2];
+
+                var _afterHeight = _after.base.y + _after.base.height / 2;
+
+                if (_y >= _afterHeight && lengthYPos < _afterHeight && _after.base.x > app.renderer.width / 2) {
+                  this.events[_i2].base.x += this.uiScale;
+                  this.events[_i2].length.x += this.uiScale;
+                  this.events[_i2].text.x += this.uiScale;
+                }
+              }
+            }
 
             _ev.base.position.set(x, _y - _ev.base.height / 2);
 
-            _ev.length.position.set(x + (this.uiScale - _ev.base.height) / 2, lengthY);
+            _ev.length.position.set(x + (this.uiScale - _ev.base.height) / 2, lengthYPos);
 
-            _ev.length.height = _y - lengthY;
+            _ev.length.height = _y - lengthYPos; //console.log(ev.base.y + ev.base.height/2,ev.base.y + ev.base.height/2 - ev.length.height)
 
             var _text = note.type.toString();
 
@@ -49335,9 +49390,9 @@ var NoteRender = /*#__PURE__*/function () {
             _ev.text.position.set(x + this.uiScale / 2, _y);
           }
 
-          if (sprite) {
+          if (graphicsObject) {
             if (note.selected) {
-              sprite.tint = 0x00ff00;
+              graphicsObject.sprite.tint = 0x00ff00;
             }
           }
         }
@@ -49365,7 +49420,7 @@ var NoteRender = /*#__PURE__*/function () {
         try {
           for (_iterator.s(); !(_step = _iterator.n()).done;) {
             var n = _step.value;
-            if ((n.type === _CustomTypes.noteTypes.BPM || n.type === _CustomTypes.noteTypes.BPM_FAKE_DISTANCE) && n.time <= t) lastBPMChange = n;
+            if ((n.type === _CustomTypes.noteTypes.BPM || n.type === _CustomTypes.noteTypes.BPM_FAKE) && n.time <= t) lastBPMChange = n;
           }
         } catch (err) {
           _iterator.e(err);
@@ -49420,18 +49475,19 @@ var NoteRender = /*#__PURE__*/function () {
     key: "getSprite",
     value: function getSprite(type) {
       if (!this.sprites[type]) {
-        this.sprites[type] = {
-          sprites: [],
-          count: 0
+        var collection = {
+          objects: [],
+          usedCount: 0
         };
+        this.sprites[type] = collection;
       }
 
-      var count = this.sprites[type].count;
-      var spriteArr = this.sprites[type].sprites;
+      var count = this.sprites[type].usedCount;
+      var objects = this.sprites[type].objects;
 
-      if (count < spriteArr.length) {
-        var sprite = spriteArr[count];
-        this.sprites[type].count++;
+      if (count < objects.length) {
+        this.sprites[type].usedCount++;
+        var sprite = objects[count];
         return sprite;
       } else {
         var res = PIXI.Loader.shared.resources;
@@ -49444,10 +49500,16 @@ var NoteRender = /*#__PURE__*/function () {
 
         _sprite.width = this.uiScale;
         _sprite.height = this.uiScale;
-        this.sprites[type].sprites.push(_sprite);
+        var graphic = new PIXI.Graphics();
+        var object = {
+          sprite: _sprite,
+          graphic: graphic
+        };
+        this.sprites[type].objects.push(object);
+        this.container.addChild(graphic);
         this.container.addChild(_sprite);
-        this.sprites[type].count++;
-        return _sprite;
+        this.sprites[type].usedCount++;
+        return object;
       }
     }
   }, {
@@ -49460,17 +49522,18 @@ var NoteRender = /*#__PURE__*/function () {
 
       try {
         for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-          var obj = _step2.value;
+          var collection = _step2.value;
 
-          if (obj) {
-            obj.sprites.forEach(function (sprite) {
-              sprite.position.set(120000, 120000);
-              sprite.width = _this3.uiScale;
-              sprite.height = _this3.uiScale;
-              sprite.tint = 0xffffff;
-              if (sprite.scale.x < 0) sprite.scale.x = -1 * sprite.scale.x;
+          if (collection) {
+            collection.objects.forEach(function (obj) {
+              obj.sprite.position.set(120000, 120000);
+              obj.sprite.width = _this3.uiScale;
+              obj.sprite.height = _this3.uiScale;
+              obj.sprite.tint = 0xffffff;
+              if (obj.sprite.scale.x < 0) obj.sprite.scale.x = -1 * obj.sprite.scale.x;
+              obj.graphic.clear();
             });
-            obj.count = 0;
+            collection.usedCount = 0;
           }
         }
       } catch (err) {
@@ -52741,225 +52804,7 @@ var global = arguments[3];
   };
 })();
 
-},{}],"src/noteLoader.ts":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.NoteLoader = void 0;
-
-var _CustomTypes = require("./CustomTypes");
-
-function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
-
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-var NoteLoader = /*#__PURE__*/function () {
-  function NoteLoader() {
-    _classCallCheck(this, NoteLoader);
-  }
-
-  _createClass(NoteLoader, null, [{
-    key: "parseChart",
-    value: function parseChart(f, arr) {
-      var _this = this;
-
-      return this.readerPromise(f).then(function (result) {
-        arr.splice(0, arr.length);
-
-        if (result !== null) {
-          var buffer = new ArrayBuffer(result.toString().length);
-          var binaryDataAsUInt = new Uint8Array(buffer);
-
-          for (var i = 0; i < result.toString().length; i++) {
-            binaryDataAsUInt[i] = result.toString().charCodeAt(i);
-          } //const checksum = this.parseBinaryInt(buffer, 4)
-
-
-          var length = _this.parseBinaryInt(buffer, 8);
-
-          var stringLength = _this.parseBinaryInt(buffer, 12); //console.log(length)
-
-
-          if (length && stringLength) {
-            var bpm = 120;
-            var spikeCenter = false;
-            var lastNote = {
-              time: 0,
-              lane: 1,
-              length: 0,
-              type: -1,
-              extra: 0
-            };
-            var lastFakeBPMMeasure = 0;
-            var lastFakeBPMTime = 0;
-            var lastFakeBPMValue = 120;
-
-            for (var _i = 0; _i < length; _i++) {
-              var bpmTime = _this.parseBinaryFloat(buffer, 16 * (_i + 1) + 0);
-
-              var type = _this.parseBinaryInt(buffer, 16 * (_i + 1) + 4);
-
-              var _length = _this.parseBinaryFloat(buffer, 16 * (_i + 1) + 8);
-
-              var extra = _this.parseBinaryFloat(buffer, 16 * (_i + 1) + 12);
-
-              if (type === _CustomTypes.noteTypes.BPM) {
-                bpm = extra ? extra : 120;
-                lastFakeBPMValue = bpm;
-              }
-
-              if (type === _CustomTypes.noteTypes.BPM_FAKE_DISTANCE && bpmTime != undefined && extra != undefined) {
-                var ticks = _this.parseBinaryInt(buffer, 16 * (_i + 1) + 12);
-
-                extra = ticks ? Math.round(60000000 / ticks) : 500000;
-                var ratio = bpm / lastFakeBPMValue;
-                var deltaMeasure = bpmTime - lastFakeBPMMeasure;
-                var t = lastFakeBPMTime + deltaMeasure * ratio;
-                lastFakeBPMMeasure = bpmTime;
-                lastFakeBPMValue = extra;
-                bpmTime = t;
-                lastFakeBPMTime = t;
-              }
-
-              if (!spikeCenter && (type === _CustomTypes.noteTypes.CF_SPIKE_G && lastNote.type === _CustomTypes.noteTypes.CF_SPIKE_B || type === _CustomTypes.noteTypes.CF_SPIKE_B && lastNote.type === _CustomTypes.noteTypes.CF_SPIKE_G)) {
-                spikeCenter = true;
-                var data = {
-                  time: lastNote.time,
-                  type: _CustomTypes.noteTypes.CROSS_C,
-                  lane: 1,
-                  length: lastNote.length,
-                  extra: lastNote.extra
-                };
-                arr.push(data);
-              }
-
-              if (type === _CustomTypes.noteTypes.CROSS_G || type === _CustomTypes.noteTypes.CROSS_C || type === _CustomTypes.noteTypes.CROSS_B) spikeCenter = false; //time === 0 and type == 0 are valid
-
-              if (bpmTime !== undefined && type !== undefined) {
-                if (type === _CustomTypes.noteTypes.REWIND_CHECKPOINT) extra = 0;
-                var _data = {
-                  time: bpmTime,
-                  type: type,
-                  lane: 1,
-                  length: _length ? _length : 0,
-                  extra: extra ? extra : 0
-                };
-                arr.push(_data);
-                lastNote = _data;
-              }
-            }
-
-            arr.sort(function (a, b) {
-              return a.time - b.time;
-            });
-
-            var _iterator = _createForOfIteratorHelper(arr),
-                _step;
-
-            try {
-              for (_iterator.s(); !(_step = _iterator.n()).done;) {
-                var d = _step.value;
-                d.lane = NoteLoader.getCrossAtTime(d.time, arr);
-              } //console.log("Loaded chart", arr)
-
-            } catch (err) {
-              _iterator.e(err);
-            } finally {
-              _iterator.f();
-            }
-
-            return bpm;
-          }
-        }
-      });
-    }
-  }, {
-    key: "parseBinaryInt",
-    value: function parseBinaryInt(buffer, startIndex) {
-      if (startIndex + 3 < buffer.byteLength) {
-        var numBuffer = new ArrayBuffer(4);
-        var bufferByteView = new Uint8Array(buffer);
-        var numByteView = new Uint8Array(numBuffer);
-        var numIntView = new Int32Array(numBuffer);
-        numByteView[0] = bufferByteView[startIndex + 3];
-        numByteView[1] = bufferByteView[startIndex + 2];
-        numByteView[2] = bufferByteView[startIndex + 1];
-        numByteView[3] = bufferByteView[startIndex + 0];
-        return numIntView[0];
-      }
-    }
-  }, {
-    key: "parseBinaryFloat",
-    value: function parseBinaryFloat(binary, startIndex) {
-      if (startIndex + 3 < binary.byteLength) {
-        var binaryAsChars = new Uint8Array(binary);
-        var resBuffer = new ArrayBuffer(4);
-        var resultAsChars = new Uint8Array(resBuffer);
-        var resultAsFloat = new Float32Array(resBuffer);
-        resultAsChars[0] = binaryAsChars[startIndex + 3];
-        resultAsChars[1] = binaryAsChars[startIndex + 2];
-        resultAsChars[2] = binaryAsChars[startIndex + 1];
-        resultAsChars[3] = binaryAsChars[startIndex + 0];
-        return resultAsFloat[0];
-      }
-    }
-  }, {
-    key: "getCrossAtTime",
-    value: function getCrossAtTime(time, arr) {
-      var cross = 1;
-
-      var _iterator2 = _createForOfIteratorHelper(arr),
-          _step2;
-
-      try {
-        for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-          var note = _step2.value;
-
-          if (note.time <= time) {
-            if (note.type === _CustomTypes.noteTypes.CROSS_G) cross = 0;else if (note.type === _CustomTypes.noteTypes.CROSS_C) cross = 1;else if (note.type === _CustomTypes.noteTypes.CROSS_B) cross = 2;
-          } else if (note.time > time) break;
-        }
-      } catch (err) {
-        _iterator2.e(err);
-      } finally {
-        _iterator2.f();
-      }
-
-      return cross;
-    }
-  }, {
-    key: "readerPromise",
-    value: function readerPromise(blob) {
-      return new Promise(function (resolve, reject) {
-        var reader = new FileReader();
-        reader.readAsBinaryString(blob);
-
-        reader.onloadend = function (event) {
-          return resolve(reader.result);
-        };
-
-        reader.onabort = function (event) {
-          return reject();
-        };
-      });
-    }
-  }]);
-
-  return NoteLoader;
-}();
-
-exports.NoteLoader = NoteLoader;
-},{"./CustomTypes":"src/CustomTypes.ts"}],"node_modules/file-saver/dist/FileSaver.min.js":[function(require,module,exports) {
+},{}],"node_modules/file-saver/dist/FileSaver.min.js":[function(require,module,exports) {
 var define;
 var global = arguments[3];
 (function(a,b){if("function"==typeof define&&define.amd)define([],b);else if("undefined"!=typeof exports)b();else{b(),a.FileSaver={exports:{}}.exports}})(this,function(){"use strict";function b(a,b){return"undefined"==typeof b?b={autoBom:!1}:"object"!=typeof b&&(console.warn("Deprecated: Expected third argument to be a object"),b={autoBom:!b}),b.autoBom&&/^\s*(?:text\/\S*|application\/xml|\S*\/\S*\+xml)\s*;.*charset\s*=\s*utf-8/i.test(a.type)?new Blob(["\uFEFF",a],{type:a.type}):a}function c(b,c,d){var e=new XMLHttpRequest;e.open("GET",b),e.responseType="blob",e.onload=function(){a(e.response,c,d)},e.onerror=function(){console.error("could not download file")},e.send()}function d(a){var b=new XMLHttpRequest;b.open("HEAD",a,!1);try{b.send()}catch(a){}return 200<=b.status&&299>=b.status}function e(a){try{a.dispatchEvent(new MouseEvent("click"))}catch(c){var b=document.createEvent("MouseEvents");b.initMouseEvent("click",!0,!0,window,0,0,0,80,20,!1,!1,!1,!1,0,null),a.dispatchEvent(b)}}var f="object"==typeof window&&window.window===window?window:"object"==typeof self&&self.self===self?self:"object"==typeof global&&global.global===global?global:void 0,a=f.saveAs||("object"!=typeof window||window!==f?function(){}:"download"in HTMLAnchorElement.prototype?function(b,g,h){var i=f.URL||f.webkitURL,j=document.createElement("a");g=g||b.name||"download",j.download=g,j.rel="noopener","string"==typeof b?(j.href=b,j.origin===location.origin?e(j):d(j.href)?c(b,g,h):e(j,j.target="_blank")):(j.href=i.createObjectURL(b),setTimeout(function(){i.revokeObjectURL(j.href)},4E4),setTimeout(function(){e(j)},0))}:"msSaveOrOpenBlob"in navigator?function(f,g,h){if(g=g||f.name||"download","string"!=typeof f)navigator.msSaveOrOpenBlob(b(f,h),g);else if(d(f))c(f,g,h);else{var i=document.createElement("a");i.href=f,i.target="_blank",setTimeout(function(){e(i)})}}:function(a,b,d,e){if(e=e||open("","_blank"),e&&(e.document.title=e.document.body.innerText="downloading..."),"string"==typeof a)return c(a,b,d);var g="application/octet-stream"===a.type,h=/constructor/i.test(f.HTMLElement)||f.safari,i=/CriOS\/[\d]+/.test(navigator.userAgent);if((i||g&&h)&&"object"==typeof FileReader){var j=new FileReader;j.onloadend=function(){var a=j.result;a=i?a:a.replace(/^data:[^;]*;/,"data:attachment/file;"),e?e.location.href=a:location=a,e=null},j.readAsDataURL(a)}else{var k=f.URL||f.webkitURL,l=k.createObjectURL(a);e?e.location=l:location.href=l,e=null,setTimeout(function(){k.revokeObjectURL(l)},4E4)}});f.saveAs=a.saveAs=a,"undefined"!=typeof module&&(module.exports=a)});
@@ -53429,7 +53274,7 @@ var _NoteRender = require("./NoteRender");
 
 var _howler = require("howler");
 
-var _noteLoader = require("./noteLoader");
+var _NoteLoader = require("./NoteLoader");
 
 var _NoteExporter = require("./NoteExporter");
 
@@ -53526,7 +53371,7 @@ function keyPress(ev) {
       var fileArray = Array.from(input.files || []);
       fileArray.forEach(function (file) {
         if (file.name.includes(".xmk")) {
-          _noteLoader.NoteLoader.parseChart(file, notes).then(function (bpm) {
+          _NoteLoader.NoteLoader.parseChart(file, notes).then(function (bpm) {
             songBpm = bpm ? bpm : 120;
             updateGUI();
           });
@@ -53590,7 +53435,7 @@ function toBase64(file) {
     };
   });
 }
-},{"pixi.js":"node_modules/pixi.js/lib/pixi.es.js","./NoteRender":"src/NoteRender.ts","howler":"node_modules/howler/dist/howler.js","./noteLoader":"src/noteLoader.ts","./NoteExporter":"src/NoteExporter.ts","./NoteManager":"src/NoteManager.ts"}],"../AppData/Roaming/npm/node_modules/parcel/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"pixi.js":"node_modules/pixi.js/lib/pixi.es.js","./NoteRender":"src/NoteRender.ts","howler":"node_modules/howler/dist/howler.js","./NoteLoader":"src/NoteLoader.ts","./NoteExporter":"src/NoteExporter.ts","./NoteManager":"src/NoteManager.ts"}],"../AppData/Roaming/npm/node_modules/parcel/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -53618,7 +53463,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "53701" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "62447" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
