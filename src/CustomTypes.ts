@@ -37,7 +37,7 @@ export enum noteTypes {
 	FX_FLANGER,
 	FX_ROBOT,
 	FX_BEATROLLAUTO,
-	FX_DELAY = 0x60000009,
+	FX_DELAY = 0x06000009,
 	STRING = 0x0affffff,
 	BPM_FAKE = 0x0b000001,
 	BPM,

@@ -48763,7 +48763,7 @@ exports.noteTypes = noteTypes;
   noteTypes[noteTypes["FX_FLANGER"] = 100663301] = "FX_FLANGER";
   noteTypes[noteTypes["FX_ROBOT"] = 100663302] = "FX_ROBOT";
   noteTypes[noteTypes["FX_BEATROLLAUTO"] = 100663303] = "FX_BEATROLLAUTO";
-  noteTypes[noteTypes["FX_DELAY"] = 1610612745] = "FX_DELAY";
+  noteTypes[noteTypes["FX_DELAY"] = 100663305] = "FX_DELAY";
   noteTypes[noteTypes["STRING"] = 184549375] = "STRING";
   noteTypes[noteTypes["BPM_FAKE"] = 184549377] = "BPM_FAKE";
   noteTypes[noteTypes["BPM"] = 184549378] = "BPM";
@@ -48846,7 +48846,7 @@ var NoteLoader = /*#__PURE__*/function () {
                 lastFakeBPMValue = bpm;
               }
 
-              if (type === _CustomTypes.noteTypes.BPM_FAKE_DISTANCE && bpmTime != undefined && extra != undefined) {
+              if (type === _CustomTypes.noteTypes.BPM_FAKE && bpmTime != undefined && extra != undefined) {
                 var ticks = _this.parseBinaryInt(buffer, 16 * (_i + 1) + 12);
 
                 extra = ticks ? Math.round(60000000 / ticks) : 500000;
@@ -48874,7 +48874,7 @@ var NoteLoader = /*#__PURE__*/function () {
               if (type === _CustomTypes.noteTypes.CROSS_G || type === _CustomTypes.noteTypes.CROSS_C || type === _CustomTypes.noteTypes.CROSS_B) spikeCenter = false; //time === 0 and type == 0 are valid
 
               if (bpmTime !== undefined && type !== undefined) {
-                if (type === _CustomTypes.noteTypes.REWIND_CHECKPOINT) extra = 0;
+                if (type === _CustomTypes.noteTypes.REWIND) extra = 0;
                 var _data = {
                   time: bpmTime,
                   type: type,
@@ -49020,18 +49020,19 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var texID;
 
 (function (texID) {
-  texID["TAP_G"] = "res/green note.png";
-  texID["TAP_R"] = "res/red note.png";
-  texID["TAP_B"] = "res/blue note.png";
+  texID["TAP_G"] = "res/green-note.png";
+  texID["TAP_R"] = "res/red-note.png";
+  texID["TAP_B"] = "res/blue-note.png";
   texID["SCR_UP"] = "res/up.png";
   texID["SCR_DOWN"] = "res/down.png";
   texID["SCR_ANYDIR"] = "res/anydir.png";
   texID["CF_SPIKE_GREEN"] = "res/cf-spike-green.png";
   texID["CF_SPIKE_BLUE"] = "res/cf-spike-blue.png";
-  texID["CLICKER_G"] = "res/clicker green.png";
-  texID["CLICKER_R"] = "res/clicker red.png";
-  texID["CLICKER_B"] = "res/clicker blue.png";
-  texID["CLICKER_BASE"] = "res/clickerSideBase.png";
+  texID["CLICKER_G"] = "res/clicker-green.png";
+  texID["CLICKER_R"] = "res/clicker-red.png";
+  texID["CLICKER_B"] = "res/clicker-blue.png";
+  texID["CLICKER_BASE"] = "res/clicker-side-base.png";
+  texID["FS_SAMPLES"] = "res/fs-samples.png";
 })(texID || (texID = {}));
 
 var textures = [];
@@ -49040,6 +49041,15 @@ for (var v in texID) {
   textures.push(texID[v]);
 }
 
+var Layers;
+
+(function (Layers) {
+  Layers[Layers["EUPHORIA"] = 0] = "EUPHORIA";
+  Layers[Layers["EFFECTS"] = 1] = "EFFECTS";
+  Layers[Layers["SCRATCH_ZONE"] = 2] = "SCRATCH_ZONE";
+  Layers[Layers["NOTE"] = 3] = "NOTE";
+})(Layers || (Layers = {}));
+
 var NoteRender = /*#__PURE__*/function () {
   function NoteRender(app) {
     var _this = this;
@@ -49047,7 +49057,7 @@ var NoteRender = /*#__PURE__*/function () {
     _classCallCheck(this, NoteRender);
 
     this.time = 0;
-    this.uiScale = 100;
+    this.uiScale = 75;
     this.timeScale = 100;
     this.clickerOffset = 100;
     this.crossPosition = 1;
@@ -49064,6 +49074,7 @@ var NoteRender = /*#__PURE__*/function () {
     this.eventRenderCount = 0;
     this.lineWidth = 16;
     this.container = new PIXI.Container();
+    this.container.sortableChildren = true;
     this.bpmContainer = new PIXI.Container();
     app.stage.addChild(this.bpmContainer);
     app.stage.addChild(this.container);
@@ -49239,32 +49250,94 @@ var NoteRender = /*#__PURE__*/function () {
         if (note.time < this.time + this.timeScale && (note.length <= 0.0625 && note.time >= this.time || note.length > 0.0625 && note.time + note.length >= this.time)) {
           var x = app.renderer.width / 2;
 
-          var _y = renderHeight - (note.time - this.time) / this.timeScale * renderHeight;
+          var _y = this.getYfromTime(note.time, renderHeight);
 
-          _y = _y > renderHeight ? renderHeight : _y;
           var graphicsObject = undefined;
 
           if (note.type === _CustomTypes.noteTypes.TAP_G || note.type === _CustomTypes.noteTypes.SCR_G_UP || note.type === _CustomTypes.noteTypes.SCR_G_DOWN || note.type === _CustomTypes.noteTypes.SCR_G_ANYDIR) {
             x -= (note.lane == 0 ? 2 : 1) * this.uiScale;
             graphicsObject = this.getSprite(note.type);
             graphicsObject.sprite.position.set(x, _y);
+            graphicsObject.sprite.zIndex = Layers.NOTE;
+            graphicsObject.graphic.zIndex = Layers.NOTE;
 
             if (note.length > 0.0625) {
-              //add tail
+              var crossfades = [];
               var width = 40;
-              var startHeight = renderHeight - (note.time + note.length - this.time) / this.timeScale * renderHeight;
               graphicsObject.graphic.beginFill(0xffffff, 0.5);
-              graphicsObject.graphic.drawRect(x - width / 2, startHeight, width, _y - startHeight);
+
+              var _iterator = _createForOfIteratorHelper(arr),
+                  _step;
+
+              try {
+                for (_iterator.s(); !(_step = _iterator.n()).done;) {
+                  var check = _step.value;
+
+                  if (check.time > note.time && check.time <= note.time + note.length && (check.type === _CustomTypes.noteTypes.CROSS_G || check.type === _CustomTypes.noteTypes.CROSS_C || check.type === _CustomTypes.noteTypes.CROSS_B)) {
+                    crossfades.push(check);
+                  }
+                }
+              } catch (err) {
+                _iterator.e(err);
+              } finally {
+                _iterator.f();
+              }
+
+              if (crossfades.length === 0) {
+                //straight tail
+                var startHeight = this.getYfromTime(note.time + note.length, renderHeight);
+                graphicsObject.graphic.drawRect(x - width / 2, startHeight, width, _y - startHeight);
+              } else {
+                var pastLane = note.lane;
+                var pastTime = note.time;
+
+                var _iterator2 = _createForOfIteratorHelper(crossfades),
+                    _step2;
+
+                try {
+                  for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+                    var c = _step2.value;
+
+                    if ((c.type === _CustomTypes.noteTypes.CROSS_C || c.type === _CustomTypes.noteTypes.CROSS_B) && pastLane === 0) {
+                      //left to center position
+                      x = app.renderer.width / 2 - 2 * this.uiScale;
+                      pastLane = 1;
+                    } else if (c.type === _CustomTypes.noteTypes.CROSS_G && pastLane === 1) {
+                      //center to left position
+                      x = app.renderer.width / 2 - this.uiScale;
+                      pastLane = 0;
+                    }
+
+                    var _topY = this.getYfromTime(c.time, renderHeight);
+
+                    var _bottomY = this.getYfromTime(pastTime, renderHeight);
+
+                    graphicsObject.graphic.drawRect(x - width / 2, _topY, width, _bottomY - _topY);
+                    pastTime = c.time;
+                  }
+                } catch (err) {
+                  _iterator2.e(err);
+                } finally {
+                  _iterator2.f();
+                }
+
+                x = app.renderer.width / 2 - (pastLane == 0 ? 2 : 1) * this.uiScale;
+                var topY = this.getYfromTime(note.time + note.length, renderHeight);
+                var bottomY = this.getYfromTime(pastTime, renderHeight);
+                graphicsObject.graphic.drawRect(x - width / 2, topY, width, bottomY - topY);
+              }
             }
           } else if (note.type === _CustomTypes.noteTypes.TAP_R) {
             graphicsObject = this.getSprite(note.type);
             graphicsObject.sprite.position.set(x, _y);
+            graphicsObject.sprite.zIndex = Layers.NOTE;
+            graphicsObject.graphic.zIndex = Layers.NOTE;
 
             if (note.length > 0.0625) {
               //add tail
               var _width = 40;
 
-              var _startHeight = renderHeight - (note.time + note.length - this.time) / this.timeScale * renderHeight;
+              var _startHeight = this.getYfromTime(note.time + note.length, renderHeight);
 
               graphicsObject.graphic.beginFill(0xffffff, 0.5);
               graphicsObject.graphic.drawRect(x - _width / 2, _startHeight, _width, _y - _startHeight);
@@ -49273,21 +49346,318 @@ var NoteRender = /*#__PURE__*/function () {
             x += (note.lane == 2 ? 2 : 1) * this.uiScale;
             graphicsObject = this.getSprite(note.type);
             graphicsObject.sprite.position.set(x, _y);
+            graphicsObject.sprite.zIndex = Layers.NOTE;
+            graphicsObject.graphic.zIndex = Layers.NOTE;
 
             if (note.length > 0.0625) {
-              //add tail
+              var _crossfades = [];
               var _width2 = 40;
-
-              var _startHeight2 = renderHeight - (note.time + note.length - this.time) / this.timeScale * renderHeight;
-
               graphicsObject.graphic.beginFill(0xffffff, 0.5);
-              graphicsObject.graphic.drawRect(x - _width2 / 2, _startHeight2, _width2, _y - _startHeight2);
+
+              var _iterator3 = _createForOfIteratorHelper(arr),
+                  _step3;
+
+              try {
+                for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+                  var _check = _step3.value;
+
+                  if (_check.time > note.time && _check.time <= note.time + note.length && (_check.type === _CustomTypes.noteTypes.CROSS_G || _check.type === _CustomTypes.noteTypes.CROSS_C || _check.type === _CustomTypes.noteTypes.CROSS_B)) {
+                    _crossfades.push(_check);
+                  }
+                }
+              } catch (err) {
+                _iterator3.e(err);
+              } finally {
+                _iterator3.f();
+              }
+
+              if (_crossfades.length === 0) {
+                //straight tail
+                var _startHeight2 = this.getYfromTime(note.time + note.length, renderHeight);
+
+                graphicsObject.graphic.drawRect(x - _width2 / 2, _startHeight2, _width2, _y - _startHeight2);
+              } else {
+                var _pastLane = note.lane;
+                var _pastTime = note.time;
+
+                var _iterator4 = _createForOfIteratorHelper(_crossfades),
+                    _step4;
+
+                try {
+                  for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+                    var _c = _step4.value;
+
+                    if ((_c.type === _CustomTypes.noteTypes.CROSS_C || _c.type === _CustomTypes.noteTypes.CROSS_G) && _pastLane === 2) {
+                      //left to center position
+                      x = app.renderer.width / 2 + 2 * this.uiScale;
+                      _pastLane = 1;
+                    } else if (_c.type === _CustomTypes.noteTypes.CROSS_B && _pastLane === 1) {
+                      //center to left position
+                      x = app.renderer.width / 2 + this.uiScale;
+                      _pastLane = 2;
+                    }
+
+                    var _topY3 = this.getYfromTime(_c.time, renderHeight);
+
+                    var _bottomY3 = this.getYfromTime(_pastTime, renderHeight);
+
+                    graphicsObject.graphic.drawRect(x - _width2 / 2, _topY3, _width2, _bottomY3 - _topY3);
+                    _pastTime = _c.time;
+                  }
+                } catch (err) {
+                  _iterator4.e(err);
+                } finally {
+                  _iterator4.f();
+                }
+
+                x = app.renderer.width / 2 + (_pastLane == 0 ? 2 : 1) * this.uiScale;
+
+                var _topY2 = this.getYfromTime(note.time + note.length, renderHeight);
+
+                var _bottomY2 = this.getYfromTime(_pastTime, renderHeight);
+
+                graphicsObject.graphic.drawRect(x - _width2 / 2, _topY2, _width2, _bottomY2 - _topY2);
+              }
             }
-          } else if (note.type == _CustomTypes.noteTypes.CF_SPIKE_G) {
+          } else if (note.type === _CustomTypes.noteTypes.FX_G) {
+            x -= 2.5 * this.uiScale;
+            graphicsObject = this.getSprite(note.type);
+            graphicsObject.graphic.beginFill(0xff7000, 0.25);
+            graphicsObject.graphic.zIndex = Layers.EFFECTS;
+
+            var _startHeight3 = this.getYfromTime(note.time + note.length, renderHeight);
+
+            graphicsObject.graphic.drawRect(x, _startHeight3, this.uiScale * 2, _y - _startHeight3);
+          } else if (note.type === _CustomTypes.noteTypes.FX_B) {
+            x += 0.5 * this.uiScale;
+            graphicsObject = this.getSprite(note.type);
+            graphicsObject.graphic.beginFill(0xff7000, 0.25);
+            graphicsObject.graphic.zIndex = Layers.EFFECTS;
+
+            var _startHeight4 = this.getYfromTime(note.time + note.length, renderHeight);
+
+            graphicsObject.graphic.drawRect(x, _startHeight4, this.uiScale * 2, _y - _startHeight4);
+          } else if (note.type === _CustomTypes.noteTypes.FX_R) {
+            x -= 0.5 * this.uiScale;
+            graphicsObject = this.getSprite(note.type);
+            graphicsObject.graphic.beginFill(0xff7000, 0.25);
+            graphicsObject.graphic.zIndex = Layers.EFFECTS;
+
+            var _startHeight5 = this.getYfromTime(note.time + note.length, renderHeight);
+
+            graphicsObject.graphic.drawRect(x, _startHeight5, this.uiScale * 1, _y - _startHeight5);
+          } else if (note.type === _CustomTypes.noteTypes.FX_ALL) {
+            x -= 2.5 * this.uiScale;
+            graphicsObject = this.getSprite(note.type);
+            graphicsObject.graphic.beginFill(0xff7000, 0.25);
+            graphicsObject.graphic.zIndex = Layers.EFFECTS;
+
+            var _startHeight6 = this.getYfromTime(note.time + note.length, renderHeight);
+
+            graphicsObject.graphic.drawRect(x, _startHeight6, this.uiScale * 5, _y - _startHeight6);
+          } else if (note.type === _CustomTypes.noteTypes.EUPHORIA) {
+            x -= 2.5 * this.uiScale;
+            graphicsObject = this.getSprite(note.type);
+            graphicsObject.graphic.beginFill(0xff7000, 0.25);
+            graphicsObject.graphic.zIndex = Layers.EUPHORIA;
+
+            var _startHeight7 = this.getYfromTime(note.time + note.length, renderHeight);
+
+            graphicsObject.graphic.drawRect(x, _startHeight7, this.uiScale * 5, _y - _startHeight7);
+          } else if (note.type === _CustomTypes.noteTypes.FS_SAMPLES) {
+            graphicsObject = this.getSprite(note.type);
+
+            var _startHeight8 = this.getYfromTime(note.time + note.length, renderHeight);
+
+            graphicsObject.graphic.zIndex = Layers.EUPHORIA;
+            graphicsObject.sprite.zIndex = Layers.NOTE;
+            graphicsObject.sprite.position.set(x, _y);
+            graphicsObject.graphic.beginFill(0xff0000, 0.75);
+            graphicsObject.graphic.drawRect(x - this.uiScale / 2, _startHeight8, this.uiScale * 1, _y - _startHeight8);
+          } else if (note.type === _CustomTypes.noteTypes.FS_CROSS) {
+            graphicsObject = this.getSprite(note.type);
+
+            var _startHeight9 = this.getYfromTime(note.time + note.length, renderHeight);
+
+            graphicsObject.graphic.zIndex = Layers.EUPHORIA;
+            var xLeft = app.renderer.width / 2 - this.uiScale * 2;
+            var xRight = app.renderer.width / 2 + this.uiScale * 1;
+            graphicsObject.graphic.beginFill(0x00ff00, 0.25);
+            graphicsObject.graphic.drawRect(xLeft, _startHeight9, this.uiScale * 1, _y - _startHeight9);
+            graphicsObject.graphic.beginFill(0x0000ff, 0.25);
+            graphicsObject.graphic.drawRect(xRight, _startHeight9, this.uiScale * 1, _y - _startHeight9);
+          } else if (note.type === _CustomTypes.noteTypes.SCR_G_ZONE) {
+            x -= (note.lane == 0 ? 2 : 1) * this.uiScale;
+            var _crossfades2 = [];
+            var _width3 = this.uiScale;
+            graphicsObject = this.getSprite(note.type);
+            graphicsObject.graphic.beginFill(0x00ff00, 1.0);
+            graphicsObject.graphic.zIndex = Layers.SCRATCH_ZONE;
+
+            var _iterator5 = _createForOfIteratorHelper(arr),
+                _step5;
+
+            try {
+              for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
+                var _check2 = _step5.value;
+
+                if (_check2.time > note.time && _check2.time <= note.time + note.length && (_check2.type === _CustomTypes.noteTypes.CROSS_G || _check2.type === _CustomTypes.noteTypes.CROSS_C || _check2.type === _CustomTypes.noteTypes.CROSS_B)) {
+                  _crossfades2.push(_check2);
+                }
+              }
+            } catch (err) {
+              _iterator5.e(err);
+            } finally {
+              _iterator5.f();
+            }
+
+            if (_crossfades2.length === 0) {
+              //straight tail
+              var _startHeight10 = this.getYfromTime(note.time + note.length, renderHeight);
+
+              graphicsObject.graphic.drawRect(x - _width3 / 2, _startHeight10, _width3, _y - _startHeight10);
+            } else {
+              var _pastLane2 = note.lane;
+              var _pastTime2 = note.time;
+
+              var _iterator6 = _createForOfIteratorHelper(_crossfades2),
+                  _step6;
+
+              try {
+                for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
+                  var _c2 = _step6.value;
+
+                  if ((_c2.type === _CustomTypes.noteTypes.CROSS_C || _c2.type === _CustomTypes.noteTypes.CROSS_B) && _pastLane2 === 0) {
+                    //left to center position
+                    x = app.renderer.width / 2 - 2 * this.uiScale;
+                    _pastLane2 = 1;
+                  } else if (_c2.type === _CustomTypes.noteTypes.CROSS_G && _pastLane2 === 1) {
+                    //center to left position
+                    x = app.renderer.width / 2 - this.uiScale;
+                    _pastLane2 = 0;
+                  }
+
+                  var _topY5 = this.getYfromTime(_c2.time, renderHeight);
+
+                  var _bottomY5 = this.getYfromTime(_pastTime2, renderHeight);
+
+                  graphicsObject.graphic.drawRect(x - _width3 / 2, _topY5, _width3, _bottomY5 - _topY5);
+                  _pastTime2 = _c2.time;
+                }
+              } catch (err) {
+                _iterator6.e(err);
+              } finally {
+                _iterator6.f();
+              }
+
+              x = app.renderer.width / 2 - (_pastLane2 == 0 ? 2 : 1) * this.uiScale;
+
+              var _topY4 = this.getYfromTime(note.time + note.length, renderHeight);
+
+              var _bottomY4 = this.getYfromTime(_pastTime2, renderHeight);
+
+              graphicsObject.graphic.drawRect(x - _width3 / 2, _topY4, _width3, _bottomY4 - _topY4);
+            }
+          } else if (note.type === _CustomTypes.noteTypes.SCR_B_ZONE) {
+            x += (note.lane == 2 ? 2 : 1) * this.uiScale;
+            var _crossfades3 = [];
+            var _width4 = this.uiScale;
+            graphicsObject = this.getSprite(note.type);
+            graphicsObject.graphic.beginFill(0x0000ff, 1.0);
+            graphicsObject.graphic.zIndex = Layers.SCRATCH_ZONE;
+
+            var _iterator7 = _createForOfIteratorHelper(arr),
+                _step7;
+
+            try {
+              for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
+                var _check3 = _step7.value;
+
+                if (_check3.time > note.time && _check3.time <= note.time + note.length && (_check3.type === _CustomTypes.noteTypes.CROSS_G || _check3.type === _CustomTypes.noteTypes.CROSS_C || _check3.type === _CustomTypes.noteTypes.CROSS_B)) {
+                  _crossfades3.push(_check3);
+                }
+              }
+            } catch (err) {
+              _iterator7.e(err);
+            } finally {
+              _iterator7.f();
+            }
+
+            if (_crossfades3.length === 0) {
+              //straight tail
+              var _startHeight11 = this.getYfromTime(note.time + note.length, renderHeight);
+
+              graphicsObject.graphic.drawRect(x - _width4 / 2, _startHeight11, _width4, _y - _startHeight11);
+            } else {
+              var _pastLane3 = note.lane;
+              var _pastTime3 = note.time;
+
+              var _iterator8 = _createForOfIteratorHelper(_crossfades3),
+                  _step8;
+
+              try {
+                for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
+                  var _c3 = _step8.value;
+
+                  if ((_c3.type === _CustomTypes.noteTypes.CROSS_C || _c3.type === _CustomTypes.noteTypes.CROSS_G) && _pastLane3 === 2) {
+                    //right to center position
+                    x = app.renderer.width / 2 + 2 * this.uiScale;
+                    _pastLane3 = 1;
+                  } else if (_c3.type === _CustomTypes.noteTypes.CROSS_B && _pastLane3 === 1) {
+                    //center to right position
+                    x = app.renderer.width / 2 + this.uiScale;
+                    _pastLane3 = 2;
+                  }
+
+                  var _topY7 = this.getYfromTime(_c3.time, renderHeight);
+
+                  var _bottomY7 = this.getYfromTime(_pastTime3, renderHeight);
+
+                  graphicsObject.graphic.drawRect(x - _width4 / 2, _topY7, _width4, _bottomY7 - _topY7);
+                  _pastTime3 = _c3.time;
+                }
+              } catch (err) {
+                _iterator8.e(err);
+              } finally {
+                _iterator8.f();
+              }
+
+              x = app.renderer.width / 2 + (_pastLane3 == 2 ? 2 : 1) * this.uiScale;
+
+              var _topY6 = this.getYfromTime(note.time + note.length, renderHeight);
+
+              var _bottomY6 = this.getYfromTime(_pastTime3, renderHeight);
+
+              graphicsObject.graphic.drawRect(x - _width4 / 2, _topY6, _width4, _bottomY6 - _topY6);
+            }
+          } else if (note.type === _CustomTypes.noteTypes.FS_CF_G_MARKER) {
+            graphicsObject = this.getSprite(note.type);
+
+            var _startHeight12 = this.getYfromTime(note.time + note.length, renderHeight);
+
+            var _width5 = this.uiScale / 5;
+
+            var margin = 10;
+            graphicsObject.graphic.zIndex = Layers.EUPHORIA;
+            graphicsObject.graphic.beginFill(0x00ff00, 1.0);
+            graphicsObject.graphic.drawRect(x - this.uiScale * 2, _startHeight12 + margin / 2, _width5, _y - _startHeight12 - margin / 2);
+          } else if (note.type === _CustomTypes.noteTypes.FS_CF_B_MARKER) {
+            graphicsObject = this.getSprite(note.type);
+
+            var _startHeight13 = this.getYfromTime(note.time + note.length, renderHeight);
+
+            var _width6 = this.uiScale / 5;
+
+            var _margin = 10;
+            graphicsObject.graphic.zIndex = Layers.EUPHORIA;
+            graphicsObject.graphic.beginFill(0x0000ff, 1.0);
+            graphicsObject.graphic.drawRect(x + this.uiScale * 2 - _width6, _startHeight13 + _margin / 2, _width6, _y - _startHeight13 - _margin / 2);
+          } else if (note.type === _CustomTypes.noteTypes.CF_SPIKE_G) {
             x -= this.uiScale * 1.5;
             graphicsObject = this.getSprite(note.type);
             graphicsObject.sprite.position.set(x, _y);
             graphicsObject.sprite.height = this.uiScale / 2;
+            graphicsObject.sprite.zIndex = Layers.NOTE;
 
             if (_NoteLoader.NoteLoader.getCrossAtTime(note.time, arr) == 2) {
               x += this.uiScale * 3;
@@ -49295,12 +49665,14 @@ var NoteRender = /*#__PURE__*/function () {
               s.sprite.position.set(x, _y);
               s.sprite.height = this.uiScale / 2;
               s.sprite.scale.x = -1 * s.sprite.scale.x;
+              s.sprite.zIndex = 2;
             }
           } else if (note.type === _CustomTypes.noteTypes.CF_SPIKE_B) {
             x += this.uiScale * 1.5;
             graphicsObject = this.getSprite(note.type);
             graphicsObject.sprite.height = this.uiScale / 2;
             graphicsObject.sprite.position.set(x, _y);
+            graphicsObject.sprite.zIndex = Layers.NOTE;
 
             if (_NoteLoader.NoteLoader.getCrossAtTime(note.time, arr) == 0) {
               x -= this.uiScale * 3;
@@ -49311,21 +49683,21 @@ var NoteRender = /*#__PURE__*/function () {
 
               _s.sprite.height = this.uiScale / 2;
               _s.sprite.scale.x = -1 * _s.sprite.scale.x;
+              _s.sprite.zIndex = 2;
             }
           } else if (note.type === _CustomTypes.noteTypes.CF_SPIKE_C) {
-            if (_NoteLoader.NoteLoader.getCrossAtTime(note.time, arr) == 0) {
-              x -= this.uiScale * 1.5;
-              graphicsObject = this.getSprite(note.type);
-              graphicsObject.sprite.height = this.uiScale / 2;
-              graphicsObject.sprite.position.set(x, _y);
-              graphicsObject.sprite.scale.x = -1 * graphicsObject.sprite.scale.x;
-            } else if (_NoteLoader.NoteLoader.getCrossAtTime(note.time, arr) == 2) {
-              x += this.uiScale * 1.5;
+            graphicsObject = this.getSprite(_CustomTypes.noteTypes.CF_SPIKE_G);
+            x -= this.uiScale * 1.5;
+
+            if (_NoteLoader.NoteLoader.getCrossAtTime(note.time, arr) == 2) {
+              x += this.uiScale * 3;
               graphicsObject = this.getSprite(_CustomTypes.noteTypes.CF_SPIKE_B);
-              graphicsObject.sprite.height = this.uiScale / 2;
-              graphicsObject.sprite.position.set(x, _y);
-              graphicsObject.sprite.scale.x = -1 * graphicsObject.sprite.scale.x;
             }
+
+            graphicsObject.sprite.height = this.uiScale / 2;
+            graphicsObject.sprite.scale.x = -1 * graphicsObject.sprite.scale.x;
+            graphicsObject.sprite.position.set(x, _y);
+            graphicsObject.sprite.zIndex = Layers.NOTE;
           } else if (note.type === _CustomTypes.noteTypes.BPM || note.type === _CustomTypes.noteTypes.BPM_FAKE) {
             var ev = this.getEvent();
             x -= this.uiScale * 4; //let lengthY = renderHeight - ((note.time + note.length - this.time) / this.timeScale) * renderHeight
@@ -49336,9 +49708,9 @@ var NoteRender = /*#__PURE__*/function () {
                 var afterHeight = after.base.y + after.base.height / 2;
 
                 if (_y === afterHeight && after.base.x < app.renderer.width / 2) {
-                  this.events[_i].base.x -= this.uiScale;
-                  this.events[_i].length.x -= this.uiScale;
-                  this.events[_i].text.x -= this.uiScale;
+                  this.events[_i].base.x -= this.uiScale * 1.5;
+                  this.events[_i].length.x -= this.uiScale * 1.5;
+                  this.events[_i].text.x -= this.uiScale * 1.5;
                 }
               }
             }
@@ -49346,7 +49718,7 @@ var NoteRender = /*#__PURE__*/function () {
             ev.base.position.set(x, _y - ev.base.height / 2); //ev.length.position.set(x - (this.uiScale - ev.base.height) / 2, lengthY)
             //ev.length.height = y - lengthY
 
-            var text = note.extra.toFixed(4);
+            var text = (note.type === _CustomTypes.noteTypes.BPM ? "BPM:" : "FAKE:") + note.extra.toFixed(0);
             /* for(let value in noteTypes){
                 if(Number(value) && value === note.type.toString()) text = noteTypes[value]
             } */
@@ -49357,7 +49729,7 @@ var NoteRender = /*#__PURE__*/function () {
             var _ev = this.getEvent();
 
             x += this.uiScale * 3;
-            var lengthYPos = renderHeight - (note.time + note.length - this.time) / this.timeScale * renderHeight;
+            var lengthYPos = this.getYfromTime(note.time + note.length, renderHeight);
 
             if (this.eventRenderCount >= 2) {
               for (var _i2 = 0; _i2 < this.eventRenderCount - 1; ++_i2) {
@@ -49366,9 +49738,9 @@ var NoteRender = /*#__PURE__*/function () {
                 var _afterHeight = _after.base.y + _after.base.height / 2;
 
                 if (_y >= _afterHeight && lengthYPos < _afterHeight && _after.base.x > app.renderer.width / 2) {
-                  this.events[_i2].base.x += this.uiScale;
-                  this.events[_i2].length.x += this.uiScale;
-                  this.events[_i2].text.x += this.uiScale;
+                  this.events[_i2].base.x += this.uiScale * 1.5;
+                  this.events[_i2].length.x += this.uiScale * 1.5;
+                  this.events[_i2].text.x += this.uiScale * 1.5;
                 }
               }
             }
@@ -49414,18 +49786,18 @@ var NoteRender = /*#__PURE__*/function () {
           extra: 0
         };
 
-        var _iterator = _createForOfIteratorHelper(notes),
-            _step;
+        var _iterator9 = _createForOfIteratorHelper(notes),
+            _step9;
 
         try {
-          for (_iterator.s(); !(_step = _iterator.n()).done;) {
-            var n = _step.value;
+          for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
+            var n = _step9.value;
             if ((n.type === _CustomTypes.noteTypes.BPM || n.type === _CustomTypes.noteTypes.BPM_FAKE) && n.time <= t) lastBPMChange = n;
           }
         } catch (err) {
-          _iterator.e(err);
+          _iterator9.e(err);
         } finally {
-          _iterator.f();
+          _iterator9.f();
         }
 
         var tickDelta = resolution * baseBPM / lastBPMChange.extra;
@@ -49472,27 +49844,43 @@ var NoteRender = /*#__PURE__*/function () {
       this.time = val;
     }
   }, {
+    key: "collectionIndex",
+    value: function collectionIndex(type) {
+      var index = -1;
+
+      for (var i = 0; i < this.sprites.length; ++i) {
+        if (this.sprites[i].id === type) {
+          index = i;
+          break;
+        }
+      }
+
+      return index;
+    }
+  }, {
     key: "getSprite",
     value: function getSprite(type) {
-      if (!this.sprites[type]) {
+      if (this.collectionIndex(type) === -1) {
         var collection = {
+          id: type,
           objects: [],
           usedCount: 0
         };
-        this.sprites[type] = collection;
+        this.sprites.push(collection);
       }
 
-      var count = this.sprites[type].usedCount;
-      var objects = this.sprites[type].objects;
+      var index = this.collectionIndex(type);
+      var count = this.sprites[index].usedCount;
+      var objects = this.sprites[index].objects;
 
       if (count < objects.length) {
-        this.sprites[type].usedCount++;
+        this.sprites[index].usedCount++;
         var sprite = objects[count];
         return sprite;
       } else {
         var res = PIXI.Loader.shared.resources;
         var tex = res[texID.TAP_R].texture;
-        if (type === _CustomTypes.noteTypes.TAP_G) tex = res[texID.TAP_G].texture;else if (type === _CustomTypes.noteTypes.TAP_B) tex = res[texID.TAP_B].texture;else if (type === _CustomTypes.noteTypes.SCR_G_UP || type === _CustomTypes.noteTypes.SCR_B_UP) tex = res[texID.SCR_UP].texture;else if (type === _CustomTypes.noteTypes.SCR_G_DOWN || type === _CustomTypes.noteTypes.SCR_B_DOWN) tex = res[texID.SCR_DOWN].texture;else if (type === _CustomTypes.noteTypes.SCR_G_ANYDIR || type === _CustomTypes.noteTypes.SCR_B_ANYDIR) tex = res[texID.SCR_ANYDIR].texture;else if (type === _CustomTypes.noteTypes.CF_SPIKE_G) tex = res[texID.CF_SPIKE_GREEN].texture;else if (type === _CustomTypes.noteTypes.CF_SPIKE_B) tex = res[texID.CF_SPIKE_BLUE].texture;
+        if (type === _CustomTypes.noteTypes.TAP_G) tex = res[texID.TAP_G].texture;else if (type === _CustomTypes.noteTypes.TAP_B) tex = res[texID.TAP_B].texture;else if (type === _CustomTypes.noteTypes.SCR_G_UP || type === _CustomTypes.noteTypes.SCR_B_UP) tex = res[texID.SCR_UP].texture;else if (type === _CustomTypes.noteTypes.SCR_G_DOWN || type === _CustomTypes.noteTypes.SCR_B_DOWN) tex = res[texID.SCR_DOWN].texture;else if (type === _CustomTypes.noteTypes.SCR_G_ANYDIR || type === _CustomTypes.noteTypes.SCR_B_ANYDIR) tex = res[texID.SCR_ANYDIR].texture;else if (type === _CustomTypes.noteTypes.CF_SPIKE_G) tex = res[texID.CF_SPIKE_GREEN].texture;else if (type === _CustomTypes.noteTypes.CF_SPIKE_B) tex = res[texID.CF_SPIKE_BLUE].texture;else if (type === _CustomTypes.noteTypes.FS_SAMPLES) tex = res[texID.FS_SAMPLES].texture;
 
         var _sprite = new PIXI.Sprite(tex);
 
@@ -49500,15 +49888,20 @@ var NoteRender = /*#__PURE__*/function () {
 
         _sprite.width = this.uiScale;
         _sprite.height = this.uiScale;
+
+        if (type === _CustomTypes.noteTypes.SCR_G_UP || type === _CustomTypes.noteTypes.SCR_B_UP || type === _CustomTypes.noteTypes.SCR_G_DOWN || type === _CustomTypes.noteTypes.SCR_B_DOWN || type === _CustomTypes.noteTypes.SCR_G_ANYDIR || type === _CustomTypes.noteTypes.SCR_B_ANYDIR) {
+          _sprite.anchor.set(0.5, 0.75);
+        }
+
         var graphic = new PIXI.Graphics();
         var object = {
           sprite: _sprite,
           graphic: graphic
         };
-        this.sprites[type].objects.push(object);
+        this.sprites[index].objects.push(object);
         this.container.addChild(graphic);
         this.container.addChild(_sprite);
-        this.sprites[type].usedCount++;
+        this.sprites[index].usedCount++;
         return object;
       }
     }
@@ -49517,29 +49910,26 @@ var NoteRender = /*#__PURE__*/function () {
     value: function resetSprites() {
       var _this3 = this;
 
-      var _iterator2 = _createForOfIteratorHelper(this.sprites),
-          _step2;
+      var _iterator10 = _createForOfIteratorHelper(this.sprites),
+          _step10;
 
       try {
-        for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-          var collection = _step2.value;
-
-          if (collection) {
-            collection.objects.forEach(function (obj) {
-              obj.sprite.position.set(120000, 120000);
-              obj.sprite.width = _this3.uiScale;
-              obj.sprite.height = _this3.uiScale;
-              obj.sprite.tint = 0xffffff;
-              if (obj.sprite.scale.x < 0) obj.sprite.scale.x = -1 * obj.sprite.scale.x;
-              obj.graphic.clear();
-            });
-            collection.usedCount = 0;
-          }
+        for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
+          var collection = _step10.value;
+          collection.objects.forEach(function (obj) {
+            obj.sprite.position.set(120000, 120000);
+            obj.sprite.width = _this3.uiScale;
+            obj.sprite.height = _this3.uiScale;
+            obj.sprite.tint = 0xffffff;
+            if (obj.sprite.scale.x < 0) obj.sprite.scale.x = -1 * obj.sprite.scale.x;
+            obj.graphic.clear();
+          });
+          collection.usedCount = 0;
         }
       } catch (err) {
-        _iterator2.e(err);
+        _iterator10.e(err);
       } finally {
-        _iterator2.f();
+        _iterator10.f();
       }
     }
   }, {
@@ -49583,23 +49973,29 @@ var NoteRender = /*#__PURE__*/function () {
   }, {
     key: "resetEvents",
     value: function resetEvents() {
-      var _iterator3 = _createForOfIteratorHelper(this.events),
-          _step3;
+      var _iterator11 = _createForOfIteratorHelper(this.events),
+          _step11;
 
       try {
-        for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-          var ev = _step3.value;
+        for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
+          var ev = _step11.value;
           ev.base.position.set(120000, 120000);
           ev.length.position.set(120000, 120000);
           ev.text.position.set(120000, 120000);
         }
       } catch (err) {
-        _iterator3.e(err);
+        _iterator11.e(err);
       } finally {
-        _iterator3.f();
+        _iterator11.f();
       }
 
       this.eventRenderCount = 0;
+    }
+  }, {
+    key: "getYfromTime",
+    value: function getYfromTime(time, renderHeight) {
+      var y = renderHeight - (time - this.time) / this.timeScale * renderHeight;
+      return Math.min(y, renderHeight);
     }
   }]);
 
@@ -53463,7 +53859,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "62447" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58838" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

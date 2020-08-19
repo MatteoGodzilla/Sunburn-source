@@ -37,7 +37,7 @@ export class NoteLoader {
 							lastFakeBPMValue = bpm
 						}
 
-						if (type === noteTypes.BPM_FAKE_DISTANCE && bpmTime != undefined && extra != undefined) {
+						if (type === noteTypes.BPM_FAKE && bpmTime != undefined && extra != undefined) {
 							let ticks = this.parseBinaryInt(buffer, 16 * (i + 1) + 12)
 							extra = ticks ? Math.round(60000000 / ticks) : 500000
 
@@ -68,7 +68,7 @@ export class NoteLoader {
 
 						//time === 0 and type == 0 are valid
 						if (bpmTime !== undefined && type !== undefined) {
-							if (type === noteTypes.REWIND_CHECKPOINT) extra = 0
+							if (type === noteTypes.REWIND) extra = 0
 
 							let data: noteData = {
 								time: bpmTime,
