@@ -162,10 +162,9 @@ export class NoteRender {
 			this.clickerBlue.position.set(app.renderer.width / 2 + 2 * this.clickerBlue.width, renderHeight)
 		}
 
-		this.redGraphic.position.set(app.renderer.width / 2, renderHeight)
-
 		let greenLanePoints = []
 		let blueLanePoints = []
+		let redLanePoints = []
 
 		this.greenGraphic.clear()
 		this.blueGraphic.clear()
@@ -220,6 +219,16 @@ export class NoteRender {
 			this.blueGraphic.lineTo(point.x, point.y)
 			lastBluePoint = point
 		})
+
+		redLanePoints.push(new PIXI.Point(0, 0))
+		redLanePoints.push(new PIXI.Point(0, -renderHeight))
+
+		this.redGraphic.lineStyle(this.lineWidth, 0xff0000)
+		redLanePoints.forEach((point) => {
+			this.redGraphic.lineTo(point.x, point.y)
+		})
+
+		this.redGraphic.position.set(app.renderer.width / 2, renderHeight)
 
 		this.resetSprites()
 		this.resetEvents()
@@ -340,7 +349,7 @@ export class NoteRender {
 								graphicsObject.graphic.drawRect(x - width / 2, topY, width, bottomY - topY)
 								pastTime = c.time
 							}
-							x = app.renderer.width / 2 + (pastLane == 0 ? 2 : 1) * this.uiScale
+							x = app.renderer.width / 2 + (pastLane == 2 ? 2 : 1) * this.uiScale
 							let topY = this.getYfromTime(note.time + note.length, renderHeight)
 							let bottomY = this.getYfromTime(pastTime, renderHeight)
 
@@ -390,39 +399,39 @@ export class NoteRender {
 				} else if (note.type === noteTypes.EUPHORIA) {
 					x -= 2.5 * this.uiScale
 					graphicsObject = this.getSprite(note.type)
-					graphicsObject.graphic.beginFill(0xff7000, 0.25)
+					graphicsObject.graphic.beginFill(0xffffff, 0.25)
 
 					graphicsObject.graphic.zIndex = Layers.EUPHORIA
 
 					let startHeight = this.getYfromTime(note.time + note.length, renderHeight)
 
 					graphicsObject.graphic.drawRect(x, startHeight, this.uiScale * 5, y - startHeight)
-				} else if(note.type === noteTypes.FS_SAMPLES){
+				} else if (note.type === noteTypes.FS_SAMPLES) {
 					graphicsObject = this.getSprite(note.type)
-					let startHeight = this.getYfromTime(note.time + note.length,renderHeight)
+					let startHeight = this.getYfromTime(note.time + note.length, renderHeight)
 
 					graphicsObject.graphic.zIndex = Layers.EUPHORIA
 					graphicsObject.sprite.zIndex = Layers.NOTE
 
-					graphicsObject.sprite.position.set(x,y)
+					graphicsObject.sprite.position.set(x, y)
 
-					graphicsObject.graphic.beginFill(0xff0000,0.75)
-					graphicsObject.graphic.drawRect(x - this.uiScale /2,startHeight,this.uiScale * 1,y - startHeight)
-				} else if(note.type === noteTypes.FS_CROSS){
+					graphicsObject.graphic.beginFill(0xff0000, 0.75)
+					graphicsObject.graphic.drawRect(x - this.uiScale / 2, startHeight, this.uiScale * 1, y - startHeight)
+				} else if (note.type === noteTypes.FS_CROSS) {
 					graphicsObject = this.getSprite(note.type)
-					let startHeight = this.getYfromTime(note.time + note.length,renderHeight)
+					let startHeight = this.getYfromTime(note.time + note.length, renderHeight)
 
 					graphicsObject.graphic.zIndex = Layers.EUPHORIA
 
 					let xLeft = app.renderer.width / 2 - this.uiScale * 2
 					let xRight = app.renderer.width / 2 + this.uiScale * 1
 
-					graphicsObject.graphic.beginFill(0x00ff00,0.25)
-					graphicsObject.graphic.drawRect(xLeft,startHeight,this.uiScale * 1,y - startHeight)
+					graphicsObject.graphic.beginFill(0x00ff00, 0.25)
+					graphicsObject.graphic.drawRect(xLeft, startHeight, this.uiScale * 1, y - startHeight)
 
-					graphicsObject.graphic.beginFill(0x0000ff,0.25)
-					graphicsObject.graphic.drawRect(xRight,startHeight,this.uiScale * 1,y - startHeight)
-				}else if (note.type === noteTypes.SCR_G_ZONE) {
+					graphicsObject.graphic.beginFill(0x0000ff, 0.25)
+					graphicsObject.graphic.drawRect(xRight, startHeight, this.uiScale * 1, y - startHeight)
+				} else if (note.type === noteTypes.SCR_G_ZONE) {
 					x -= (note.lane == 0 ? 2 : 1) * this.uiScale
 					let crossfades: noteData[] = []
 					let width = this.uiScale
@@ -510,10 +519,10 @@ export class NoteRender {
 
 						graphicsObject.graphic.drawRect(x - width / 2, topY, width, bottomY - topY)
 					}
-				} else if(note.type === noteTypes.FS_CF_G_MARKER){
+				} else if (note.type === noteTypes.FS_CF_G_MARKER) {
 					graphicsObject = this.getSprite(note.type)
 
-					let startHeight = this.getYfromTime(note.time + note.length,renderHeight)
+					let startHeight = this.getYfromTime(note.time + note.length, renderHeight)
 
 					let width = this.uiScale / 5
 
@@ -521,13 +530,13 @@ export class NoteRender {
 
 					graphicsObject.graphic.zIndex = Layers.EUPHORIA
 
-					graphicsObject.graphic.beginFill(0x00ff00,1.0)
+					graphicsObject.graphic.beginFill(0x00ff00, 1.0)
 
-					graphicsObject.graphic.drawRect(x - this.uiScale * 2,startHeight + margin / 2,width,y-startHeight - margin /2)
-				} else if(note.type === noteTypes.FS_CF_B_MARKER){
+					graphicsObject.graphic.drawRect(x - this.uiScale * 2, startHeight + margin / 2, width, y - startHeight - margin / 2)
+				} else if (note.type === noteTypes.FS_CF_B_MARKER) {
 					graphicsObject = this.getSprite(note.type)
 
-					let startHeight = this.getYfromTime(note.time + note.length,renderHeight)
+					let startHeight = this.getYfromTime(note.time + note.length, renderHeight)
 
 					let width = this.uiScale / 5
 
@@ -535,9 +544,9 @@ export class NoteRender {
 
 					graphicsObject.graphic.zIndex = Layers.EUPHORIA
 
-					graphicsObject.graphic.beginFill(0x0000ff,1.0)
+					graphicsObject.graphic.beginFill(0x0000ff, 1.0)
 
-					graphicsObject.graphic.drawRect(x + this.uiScale * 2 - width,startHeight + margin / 2,width,y-startHeight - margin /2)
+					graphicsObject.graphic.drawRect(x + this.uiScale * 2 - width, startHeight + margin / 2, width, y - startHeight - margin / 2)
 				} else if (note.type === noteTypes.CF_SPIKE_G) {
 					x -= this.uiScale * 1.5
 					graphicsObject = this.getSprite(note.type)
@@ -760,11 +769,9 @@ export class NoteRender {
 			sprite.width = this.uiScale
 			sprite.height = this.uiScale
 
-			if(type === noteTypes.SCR_G_UP || type === noteTypes.SCR_B_UP || 
-				type === noteTypes.SCR_G_DOWN || type === noteTypes.SCR_B_DOWN || 
-				type === noteTypes.SCR_G_ANYDIR || type === noteTypes.SCR_B_ANYDIR){
-					sprite.anchor.set(0.5,0.75)
-				}
+			if (type === noteTypes.SCR_G_UP || type === noteTypes.SCR_B_UP || type === noteTypes.SCR_G_DOWN || type === noteTypes.SCR_B_DOWN || type === noteTypes.SCR_G_ANYDIR || type === noteTypes.SCR_B_ANYDIR) {
+				sprite.anchor.set(0.5, 0.75)
+			}
 
 			let graphic = new PIXI.Graphics()
 

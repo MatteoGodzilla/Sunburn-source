@@ -1,5 +1,5 @@
 import * as PIXI from "pixi.js"
-import { noteData } from "./CustomTypes"
+import { noteData, getTypeStringName, noteTypes } from "./CustomTypes"
 import { NoteRender } from "./NoteRender"
 import { Howl } from "howler"
 import { NoteLoader } from "./NoteLoader"
@@ -17,7 +17,7 @@ let inputPos = <HTMLInputElement>document.getElementById("inputPos")
 let inputTimeScale = <HTMLInputElement>document.getElementById("inputTimeScale")
 let inputUIScale = <HTMLInputElement>document.getElementById("inputUIScale")
 
-let inputNoteType = <HTMLInputElement>document.getElementById("inputNoteType")
+let inputNoteType = <HTMLSelectElement>document.getElementById("inputNoteType")
 let inputNoteTime = <HTMLInputElement>document.getElementById("inputNoteTime")
 let inputNoteLength = <HTMLInputElement>document.getElementById("inputNoteLength")
 
@@ -32,6 +32,19 @@ let songBpm = 120
 
 let sound = new Howl({ src: [""] })
 sound.volume(0.25)
+
+function init() {
+	for (let t in noteTypes) {
+		if (!isNaN(Number(t))) {
+			let elm = document.createElement("option")
+			elm.value = t
+			elm.text = getTypeStringName(Number(t))
+			inputNoteType.options.add(elm)
+		}
+	}
+}
+
+init()
 
 app.ticker.add((delta) => {
 	if (sound.playing()) {
@@ -133,7 +146,13 @@ function updateGUI() {
 	inputTimeScale.value = timeWarp.toFixed(2)
 	inputUIScale.value = noteRender.uiScale.toFixed(2)
 
-	inputNoteType.value = noteManager.selectedNote.type.toString()
+	let index = -1
+	for (let i = 0; i < inputNoteType.options.length; ++i) {
+		//console.log(t)
+		if(Number(inputNoteType.options[i].value) === noteManager.selectedNote.type) index = i
+	}
+
+	inputNoteType.selectedIndex = index
 	inputNoteTime.value = noteManager.selectedNote.time.toString()
 	inputNoteLength.value = noteManager.selectedNote.length.toString()
 }
