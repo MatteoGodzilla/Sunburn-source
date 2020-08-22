@@ -17,18 +17,12 @@ table {
 	width: 100%;
 }
 
-.btn {
-	background-color: darkgray;
-	border-radius: 10px;
-}
-
-.img {
-	width: 80px;
-	height: 80px;
-}
-
-.selected {
-	background: darkorange;
+.top {
+	height: 20px;
+	background-color: dimgray;
+	border-color: darkgray;
+	border-style: solid;
+	width: 310;
 }
 
 .separator {
@@ -40,11 +34,33 @@ table {
 	border-style: solid;
 }
 
+.flex {
+	display: flex;
+	justify-content: space-evenly;
+	flex-wrap: wrap;
+}
+
+.img {
+	border-radius: 20px;
+	width: 80px;
+	height: 80px;
+}
+
+.selected {
+	background: orangered;
+}
+
+.content {
+	background-color: darkgray;
+	padding: 10px;
+}
+
 #divMain {
 	position: absolute;
-	left: 10px;
-	top: 10px;
-	background-color: darkgray;
-	border-radius: 10px;
-	padding: 10px;
+	background-color: gray;
+	overflow: hidden;
+	border-radius: 25px;
+	min-width: 250px;
+	resize: both;
+	width: 310px;
 }

@@ -21,6 +21,8 @@ export class NoteLoader {
 				if (length && stringLength) {
 					let bpm = 120
 					let spikeCenter = false
+					let spikeChainStarted = false
+					let spikeChainTime = 0
 					let lastNote: noteData = { time: 0, lane: 1, length: 0, type: -1, extra: 0 }
 
 					let lastFakeBPMMeasure = 0
@@ -52,19 +54,27 @@ export class NoteLoader {
 							lastFakeBPMTime = t
 						}
 
-						if (!spikeCenter && ((type === noteTypes.CF_SPIKE_G && lastNote.type === noteTypes.CF_SPIKE_B) || (type === noteTypes.CF_SPIKE_B && lastNote.type === noteTypes.CF_SPIKE_G))) {
-							spikeCenter = true
-							let data: noteData = {
-								time: lastNote.time,
-								type: noteTypes.CROSS_C,
-								lane: 1,
-								length: lastNote.length,
-								extra: lastNote.extra
+						if ((type === noteTypes.CF_SPIKE_B || type === noteTypes.CF_SPIKE_G) && bpmTime !== undefined) {
+							if (!spikeChainStarted) {
+								spikeChainStarted = true
+								spikeChainTime = bpmTime
+							} else if (!spikeCenter) {
+								spikeCenter = true
+								let data: noteData = {
+									time: lastNote.time,
+									type: noteTypes.CROSS_C,
+									lane: 1,
+									length: lastNote.length,
+									extra: lastNote.extra
+								}
+								arr.push(data)
 							}
-							arr.push(data)
 						}
 
-						if (type === noteTypes.CROSS_G || type === noteTypes.CROSS_C || type === noteTypes.CROSS_B) spikeCenter = false
+						if (type === noteTypes.CROSS_G || type === noteTypes.CROSS_C || type === noteTypes.CROSS_B) {
+							spikeCenter = false
+							spikeChainStarted = false
+						}
 
 						//time === 0 and type == 0 are valid
 						if (bpmTime !== undefined && type !== undefined) {
@@ -85,7 +95,29 @@ export class NoteLoader {
 
 					for (let d of arr) {
 						d.lane = NoteLoader.getCrossAtTime(d.time, arr)
+						if (d.type === noteTypes.FX_G || d.type === noteTypes.FX_B || d.type === noteTypes.FX_R || d.type === noteTypes.FX_ALL) {
+							//check if fx type is specified
+							let present = false
+							let fxTypes = [noteTypes.FX_FILTER, noteTypes.FX_BEATROLL, noteTypes.FX_BITREDUCTION, noteTypes.FX_WAHWAH, noteTypes.FX_RINGMOD, noteTypes.FX_STUTTER, noteTypes.FX_FLANGER, noteTypes.FX_ROBOT, noteTypes.FX_BEATROLLAUTO, noteTypes.FX_DELAY]
+							for (let check of arr) {
+								if (fxTypes.includes(check.type) && check.time === d.time) {
+									present = true
+									break
+								}
+							}
+							if (!present) {
+								let data: noteData = {
+									time: d.time,
+									type: noteTypes.FX_FILTER,
+									lane: d.lane,
+									length: d.length,
+									extra: 0
+								}
+								arr.push(data)
+							}
+						}
 					}
+					arr.sort((a, b) => a.time - b.time)
 					//console.log("Loaded chart", arr)
 					return bpm
 				}

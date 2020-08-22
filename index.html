@@ -8,94 +8,114 @@
 <body>
 	<link rel="stylesheet" href="./src/style.css">
 	<div id="divMain">
-		<div class="separator"></div>
-		<table>
-			<colgroup>
-				<col style="width: 25%;">
-				<col style="width: auto;">
-			</colgroup>
-			<tbody>
-				<tr>
-					<td>
-						<label for="inputBPM" >BPM:</label>
-					</td>
-					<td>
-						<input type="number" id="inputBPM" style="width: 100%;"/>
-					</td>
-				</tr>
-				<tr>
-					<td>
-						<label for="inputPos">Position:</label>
-					</td>
-					<td>
-						<input type="number" id="inputPos" style="width: 100%;"/>
-					</td>
-				</tr>
-				<tr>
-					<td>
-						<label for="inputTimeScale">Visible:</label>
-					</td>
-					<td>
-						<input type="number" id="inputTimeScale" style="width: 100%;"/>
-					</td>
-				</tr>
-				<tr>
-					<td>
-						<label for="inputUIScale">Scale:</label>
-					</td>
-					<td>
-						<input type="number" id="inputUIScale" style="width: 100%;"/>
-					</td>
-				</tr>
-			</tbody>
-		</table>
-		<div class="separator"></div>
-		<!--<table>
-			<tr>
-				<td><img src="./dist/res/green note.png" class="img"/></td>
-				<td><img src="./dist/res/crossfade.png" class="img"/></td>
-				<td><img src="./dist/res/anydir.png" class="img"/></td>
-			</tr>
-			<tr>
-				<td><img src="./dist/res/spikes.png" class="img"/></td>
-				<td><img src="./dist/res/fx-icon.png" class="img"/></td>
-				<td><img src="./dist/res/freestyle-icon.png" class="img"/></td>
-			</tr>
-		</table>
-		<div class="separator"></div>-->
-		<table>
-			<colgroup>
-				<col style="width: 33%;">
-				<col style="width: auto;">
-			</colgroup>
-			<tbody>
-				<tr>
-					<td>
-						<label >Note Type:</label>
-					</td>
-					<td>
-						<select id="inputNoteType" style="width: 100%;"></select>
-					</td>
-				</tr>
-				<tr>
-					<td>
-						<label for="inputNoteTime">Note Time:</label>
-					</td>
-					<td>
-						<input type="number" id="inputNoteTime" style="width: 100%;"/>
-					</td>
-				</tr>
-				<tr>
-					<td>
-						<label for="inputNoteLength">Note Length:</label>
-					</td>
-					<td>
-						<input type="number" id="inputNoteLength" style="width: 100%;"/>
-					</td>
-				</tr>
-			</tbody>
-		</table>
-		<div class="separator"></div>
+		<div class="top" id="divTopBar"></div>
+		<div class="content">
+			<table>
+				<colgroup>
+					<col style="width: 25%;">
+					<col style="width: auto;">
+				</colgroup>
+				<tbody>
+					<tr>
+						<td>
+							<label for="inputBPM" >BPM:</label>
+						</td>
+						<td>
+							<input type="number" id="inputBPM" style="width: 100%;"/>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<label for="inputPos">Position:</label>
+						</td>
+						<td>
+							<input type="number" id="inputPos" style="width: 100%;"/>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<label for="inputTimeScale">Visible:</label>
+						</td>
+						<td>
+							<input type="number" id="inputTimeScale" style="width: 100%;"/>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<label for="inputUIScale">Scale:</label>
+						</td>
+						<td>
+							<input type="number" id="inputUIScale" style="width: 100%;"/>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<label for="inputBPMRes">BPM Ticks:</label>
+						</td>
+						<td>
+							<input type="number" id="inputBPMRes" style="width: 100%;"/>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			<div class="separator"></div>
+			<div class="flex" id="divClass">
+				<img src="./dist/res/green-note.png" class="img"/>
+				<img src="./dist/res/anydir.png" class="img"/>
+				<img src="./dist/res/crossfade.png" class="img"/>
+				<img src="./dist/res/fx-icon.png" class="img"/>
+				<img src="./dist/res/freestyle-icon.png" class="img"/>
+				<img src="./dist/res/events.png" class="img"/>
+			</div>
+			<div class="separator"></div>
+			<div class="flex" id="divModes">
+				<img src="./dist/res/add-button.png" class="img"/>
+				<img src="./dist/res/sel-button.png" class="img"/>
+				<img src="./dist/res/del-button.png" class="img"/>
+			</div>
+			<div class="separator"></div>
+			<table>
+				<colgroup>
+					<col style="width: 33%;">
+					<col style="width: auto;">
+				</colgroup>
+				<tbody>
+					<tr>
+						<td>
+							<label >Note Type:</label>
+						</td>
+						<td>
+							<select id="inputNoteType" style="width: 100%;"></select>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<label for="inputNoteTime">Note Time:</label>
+						</td>
+						<td>
+							<input type="number" id="inputNoteTime" style="width: 100%;"/>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<label for="inputNoteLength">Note Length:</label>
+						</td>
+						<td>
+							<input type="number" id="inputNoteLength" style="width: 100%;"/>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<label for="inputNoteExtra">Note Extra:</label>
+						</td>
+						<td>
+							<input id="inputNoteExtra" style="width: 100%;"/>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			<div class="separator"></div>
+		</div>
 	</div>
 	<script src="./src/main.ts"></script>
 </body>

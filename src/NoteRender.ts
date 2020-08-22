@@ -36,6 +36,16 @@ enum Layers {
 	NOTE
 }
 
+enum Colors {
+	GREEN = 0x22df2e,
+	RED = 0xd21c1c,
+	BLUE = 0x3d4ebe,
+	WHITE = 0xffffff,
+	ORANGE = 0xeb6818,
+	GRAY = 0x333333,
+	HIGHLIGHT = 0xffcc00
+}
+
 export class NoteRender {
 	private container: PIXI.Container
 	private bpmContainer: PIXI.Container
@@ -43,7 +53,9 @@ export class NoteRender {
 	uiScale = 75
 	timeScale = 100
 	clickerOffset = 100
+	bpmResolution = 1 / 4
 	private crossPosition = 1
+	private padding = 10
 
 	private clickerBaseLeft = new PIXI.Sprite()
 	private clickerBaseRight = new PIXI.Sprite()
@@ -118,23 +130,23 @@ export class NoteRender {
 			redLanePoints.push(new PIXI.Point(0, -renderHeight))
 
 			this.redGraphic = new PIXI.Graphics()
-			this.redGraphic.lineStyle(this.lineWidth, 0xff0000)
+			this.redGraphic.lineStyle(this.lineWidth, Colors.RED)
 			redLanePoints.forEach((point) => {
 				this.redGraphic.lineTo(point.x, point.y)
 			})
 			this.container.addChild(this.redGraphic)
 
 			this.greenGraphic = new PIXI.Graphics()
-			this.greenGraphic.lineStyle(this.lineWidth, 0x00ff00)
+			this.greenGraphic.lineStyle(this.lineWidth, Colors.GREEN)
 			this.container.addChild(this.greenGraphic)
 
 			this.blueGraphic = new PIXI.Graphics()
-			this.blueGraphic.lineStyle(this.lineWidth, 0x00ff00)
+			this.blueGraphic.lineStyle(this.lineWidth, Colors.BLUE)
 			this.container.addChild(this.blueGraphic)
 		})
 
 		/*
-		let test = new PIXI.Text("ASDFASDF",new PIXI.TextStyle({fill:0xffffff}))
+		let test = new PIXI.Text("ASDFASDF",new PIXI.TextStyle({fill:Colors.WHITE}))
 		test.position.set(0,500)
 		test.text = "CHANGED"
 		this.container.addChild(test)
@@ -168,6 +180,7 @@ export class NoteRender {
 
 		this.greenGraphic.clear()
 		this.blueGraphic.clear()
+		this.redGraphic.clear()
 
 		for (let y = 0; y < renderHeight; y++) {
 			let t = this.time + this.timeScale * (y / renderHeight)
@@ -197,7 +210,7 @@ export class NoteRender {
 			if (point.x != lastGreenPoint.x) {
 				this.greenGraphic.lineTo(lastGreenPoint.x, point.y)
 			}
-			this.greenGraphic.lineStyle(this.lineWidth, 0x00ff00)
+			this.greenGraphic.lineStyle(this.lineWidth, Colors.GREEN)
 			this.greenGraphic.lineTo(point.x, point.y)
 			lastGreenPoint = point
 		})
@@ -215,7 +228,7 @@ export class NoteRender {
 			if (point.x != lastBluePoint.x) {
 				this.blueGraphic.lineTo(lastBluePoint.x, point.y)
 			}
-			this.blueGraphic.lineStyle(this.lineWidth, 0x0000ff)
+			this.blueGraphic.lineStyle(this.lineWidth, Colors.BLUE)
 			this.blueGraphic.lineTo(point.x, point.y)
 			lastBluePoint = point
 		})
@@ -223,7 +236,7 @@ export class NoteRender {
 		redLanePoints.push(new PIXI.Point(0, 0))
 		redLanePoints.push(new PIXI.Point(0, -renderHeight))
 
-		this.redGraphic.lineStyle(this.lineWidth, 0xff0000)
+		this.redGraphic.lineStyle(this.lineWidth, Colors.RED)
 		redLanePoints.forEach((point) => {
 			this.redGraphic.lineTo(point.x, point.y)
 		})
@@ -252,7 +265,7 @@ export class NoteRender {
 					if (note.length > 0.0625) {
 						let crossfades: noteData[] = []
 						let width = 40
-						graphicsObject.graphic.beginFill(0xffffff, 0.5)
+						graphicsObject.graphic.beginFill(Colors.WHITE, 0.5)
 
 						for (let check of arr) {
 							if (check.time > note.time && check.time <= note.time + note.length && (check.type === noteTypes.CROSS_G || check.type === noteTypes.CROSS_C || check.type === noteTypes.CROSS_B)) {
@@ -303,7 +316,7 @@ export class NoteRender {
 						let width = 40
 						let startHeight = this.getYfromTime(note.time + note.length, renderHeight)
 
-						graphicsObject.graphic.beginFill(0xffffff, 0.5)
+						graphicsObject.graphic.beginFill(Colors.WHITE, 0.5)
 						graphicsObject.graphic.drawRect(x - width / 2, startHeight, width, y - startHeight)
 					}
 				} else if (note.type === noteTypes.TAP_B || note.type === noteTypes.SCR_B_UP || note.type === noteTypes.SCR_B_DOWN || note.type === noteTypes.SCR_B_ANYDIR) {
@@ -317,7 +330,7 @@ export class NoteRender {
 					if (note.length > 0.0625) {
 						let crossfades: noteData[] = []
 						let width = 40
-						graphicsObject.graphic.beginFill(0xffffff, 0.5)
+						graphicsObject.graphic.beginFill(Colors.WHITE, 0.5)
 
 						for (let check of arr) {
 							if (check.time > note.time && check.time <= note.time + note.length && (check.type === noteTypes.CROSS_G || check.type === noteTypes.CROSS_C || check.type === noteTypes.CROSS_B)) {
@@ -359,47 +372,47 @@ export class NoteRender {
 				} else if (note.type === noteTypes.FX_G) {
 					x -= 2.5 * this.uiScale
 					graphicsObject = this.getSprite(note.type)
-					graphicsObject.graphic.beginFill(0xff7000, 0.25)
+					graphicsObject.graphic.beginFill(Colors.ORANGE, 0.25)
 
 					graphicsObject.graphic.zIndex = Layers.EFFECTS
 
 					let startHeight = this.getYfromTime(note.time + note.length, renderHeight)
 
-					graphicsObject.graphic.drawRect(x, startHeight, this.uiScale * 2, y - startHeight)
+					graphicsObject.graphic.drawRect(x, startHeight + this.padding, this.uiScale * 2, y - startHeight - this.padding)
 				} else if (note.type === noteTypes.FX_B) {
 					x += 0.5 * this.uiScale
 					graphicsObject = this.getSprite(note.type)
-					graphicsObject.graphic.beginFill(0xff7000, 0.25)
+					graphicsObject.graphic.beginFill(Colors.ORANGE, 0.25)
 
 					graphicsObject.graphic.zIndex = Layers.EFFECTS
 
 					let startHeight = this.getYfromTime(note.time + note.length, renderHeight)
 
-					graphicsObject.graphic.drawRect(x, startHeight, this.uiScale * 2, y - startHeight)
+					graphicsObject.graphic.drawRect(x, startHeight + this.padding, this.uiScale * 2, y - startHeight - this.padding)
 				} else if (note.type === noteTypes.FX_R) {
 					x -= 0.5 * this.uiScale
 					graphicsObject = this.getSprite(note.type)
-					graphicsObject.graphic.beginFill(0xff7000, 0.25)
+					graphicsObject.graphic.beginFill(Colors.ORANGE, 0.25)
 
 					graphicsObject.graphic.zIndex = Layers.EFFECTS
 
 					let startHeight = this.getYfromTime(note.time + note.length, renderHeight)
 
-					graphicsObject.graphic.drawRect(x, startHeight, this.uiScale * 1, y - startHeight)
+					graphicsObject.graphic.drawRect(x, startHeight + this.padding, this.uiScale * 1, y - startHeight - this.padding)
 				} else if (note.type === noteTypes.FX_ALL) {
 					x -= 2.5 * this.uiScale
 					graphicsObject = this.getSprite(note.type)
-					graphicsObject.graphic.beginFill(0xff7000, 0.25)
+					graphicsObject.graphic.beginFill(Colors.ORANGE, 0.25)
 
 					graphicsObject.graphic.zIndex = Layers.EFFECTS
 
 					let startHeight = this.getYfromTime(note.time + note.length, renderHeight)
 
-					graphicsObject.graphic.drawRect(x, startHeight, this.uiScale * 5, y - startHeight)
+					graphicsObject.graphic.drawRect(x, startHeight + this.padding, this.uiScale * 5, y - startHeight - this.padding)
 				} else if (note.type === noteTypes.EUPHORIA) {
 					x -= 2.5 * this.uiScale
 					graphicsObject = this.getSprite(note.type)
-					graphicsObject.graphic.beginFill(0xffffff, 0.25)
+					graphicsObject.graphic.beginFill(Colors.WHITE, 0.25)
 
 					graphicsObject.graphic.zIndex = Layers.EUPHORIA
 
@@ -415,7 +428,7 @@ export class NoteRender {
 
 					graphicsObject.sprite.position.set(x, y)
 
-					graphicsObject.graphic.beginFill(0xff0000, 0.75)
+					graphicsObject.graphic.beginFill(Colors.RED, 0.75)
 					graphicsObject.graphic.drawRect(x - this.uiScale / 2, startHeight, this.uiScale * 1, y - startHeight)
 				} else if (note.type === noteTypes.FS_CROSS) {
 					graphicsObject = this.getSprite(note.type)
@@ -426,17 +439,17 @@ export class NoteRender {
 					let xLeft = app.renderer.width / 2 - this.uiScale * 2
 					let xRight = app.renderer.width / 2 + this.uiScale * 1
 
-					graphicsObject.graphic.beginFill(0x00ff00, 0.25)
+					graphicsObject.graphic.beginFill(Colors.GREEN, 0.25)
 					graphicsObject.graphic.drawRect(xLeft, startHeight, this.uiScale * 1, y - startHeight)
 
-					graphicsObject.graphic.beginFill(0x0000ff, 0.25)
+					graphicsObject.graphic.beginFill(Colors.BLUE, 0.25)
 					graphicsObject.graphic.drawRect(xRight, startHeight, this.uiScale * 1, y - startHeight)
 				} else if (note.type === noteTypes.SCR_G_ZONE) {
 					x -= (note.lane == 0 ? 2 : 1) * this.uiScale
 					let crossfades: noteData[] = []
 					let width = this.uiScale
 					graphicsObject = this.getSprite(note.type)
-					graphicsObject.graphic.beginFill(0x00ff00, 1.0)
+					graphicsObject.graphic.beginFill(Colors.GREEN, 1.0)
 					graphicsObject.graphic.zIndex = Layers.SCRATCH_ZONE
 
 					for (let check of arr) {
@@ -480,7 +493,7 @@ export class NoteRender {
 					let crossfades: noteData[] = []
 					let width = this.uiScale
 					graphicsObject = this.getSprite(note.type)
-					graphicsObject.graphic.beginFill(0x0000ff, 1.0)
+					graphicsObject.graphic.beginFill(Colors.BLUE, 1.0)
 					graphicsObject.graphic.zIndex = Layers.SCRATCH_ZONE
 
 					for (let check of arr) {
@@ -526,13 +539,11 @@ export class NoteRender {
 
 					let width = this.uiScale / 5
 
-					let margin = 10
-
 					graphicsObject.graphic.zIndex = Layers.EUPHORIA
 
-					graphicsObject.graphic.beginFill(0x00ff00, 1.0)
+					graphicsObject.graphic.beginFill(Colors.GREEN, 1.0)
 
-					graphicsObject.graphic.drawRect(x - this.uiScale * 2, startHeight + margin / 2, width, y - startHeight - margin / 2)
+					graphicsObject.graphic.drawRect(x - this.uiScale * 2, startHeight + this.padding / 2, width, y - startHeight - this.padding / 2)
 				} else if (note.type === noteTypes.FS_CF_B_MARKER) {
 					graphicsObject = this.getSprite(note.type)
 
@@ -540,13 +551,11 @@ export class NoteRender {
 
 					let width = this.uiScale / 5
 
-					let margin = 10
-
 					graphicsObject.graphic.zIndex = Layers.EUPHORIA
 
-					graphicsObject.graphic.beginFill(0x0000ff, 1.0)
+					graphicsObject.graphic.beginFill(Colors.BLUE, 1.0)
 
-					graphicsObject.graphic.drawRect(x + this.uiScale * 2 - width, startHeight + margin / 2, width, y - startHeight - margin / 2)
+					graphicsObject.graphic.drawRect(x + this.uiScale * 2 - width, startHeight + this.padding / 2, width, y - startHeight - this.padding / 2)
 				} else if (note.type === noteTypes.CF_SPIKE_G) {
 					x -= this.uiScale * 1.5
 					graphicsObject = this.getSprite(note.type)
@@ -592,7 +601,7 @@ export class NoteRender {
 					graphicsObject.sprite.scale.x = -1 * graphicsObject.sprite.scale.x
 					graphicsObject.sprite.position.set(x, y)
 					graphicsObject.sprite.zIndex = Layers.NOTE
-				} else if (note.type === noteTypes.BPM || note.type === noteTypes.BPM_FAKE) {
+				} else if (note.type === noteTypes.BPM_FAKE) {
 					let ev = this.getEvent()
 					x -= this.uiScale * 4
 
@@ -615,13 +624,13 @@ export class NoteRender {
 					//ev.length.position.set(x - (this.uiScale - ev.base.height) / 2, lengthY)
 					//ev.length.height = y - lengthY
 
-					let text = (note.type === noteTypes.BPM ? "BPM:" : "FAKE:") + note.extra.toFixed(0)
+					let text = note.extra.toFixed(0)
 					/* for(let value in noteTypes){
 						if(Number(value) && value === note.type.toString()) text = noteTypes[value]
 					} */
 					ev.text.text = text
 					ev.text.position.set(x + this.uiScale / 2, y)
-				} else if (note.type !== noteTypes.CROSS_G && note.type !== noteTypes.CROSS_B && note.type !== noteTypes.CROSS_C) {
+				} else if (note.type !== noteTypes.CROSS_G && note.type !== noteTypes.CROSS_B && note.type !== noteTypes.CROSS_C && note.type !== noteTypes.BPM) {
 					let ev = this.getEvent()
 					x += this.uiScale * 3
 
@@ -631,7 +640,7 @@ export class NoteRender {
 						for (let i = 0; i < this.eventRenderCount - 1; ++i) {
 							let after = this.events[i]
 							let afterHeight = after.base.y + after.base.height / 2
-							if (y >= afterHeight && lengthYPos < afterHeight && after.base.x > app.renderer.width / 2) {
+							if (y >= afterHeight && lengthYPos <= afterHeight && after.base.x > app.renderer.width / 2) {
 								this.events[i].base.x += this.uiScale * 1.5
 								this.events[i].length.x += this.uiScale * 1.5
 								this.events[i].text.x += this.uiScale * 1.5
@@ -656,7 +665,7 @@ export class NoteRender {
 
 				if (graphicsObject) {
 					if (note.selected) {
-						graphicsObject.sprite.tint = 0x00ff00
+						graphicsObject.sprite.tint = Colors.HIGHLIGHT
 					}
 				}
 			}
@@ -667,21 +676,18 @@ export class NoteRender {
 		this.bpmContainer.removeChildren()
 		let renderHeight = app.renderer.height - this.clickerOffset
 
-		let resolution = 1 / 4
-
 		for (let t = this.time; t < this.time + this.timeScale; ) {
 			let lastBPMChange: noteData = { time: 0, type: 0, length: 0, lane: 0, extra: 0 }
 			for (let n of notes) {
 				if ((n.type === noteTypes.BPM || n.type === noteTypes.BPM_FAKE) && n.time <= t) lastBPMChange = n
 			}
-			let tickDelta = (resolution * baseBPM) / lastBPMChange.extra
+			let tickDelta = (this.bpmResolution * baseBPM) / lastBPMChange.extra
 			let closestBeat = Math.ceil((t - lastBPMChange.time) / tickDelta) * tickDelta + lastBPMChange.time
 
 			let y = renderHeight - ((closestBeat - this.time) / this.timeScale) * renderHeight
 
 			let g = new PIXI.Graphics()
-			g.beginFill(0x333333)
-			//if (Math.floor(i) === i) g.beginFill(0x555555)
+			g.beginFill(Colors.GRAY)
 			let height = 20
 			g.drawRect(app.renderer.width / 2 - 2 * this.uiScale, y - height / 2, 4 * this.uiScale, height)
 			this.bpmContainer.addChild(g)
@@ -795,7 +801,7 @@ export class NoteRender {
 				obj.sprite.position.set(120000, 120000)
 				obj.sprite.width = this.uiScale
 				obj.sprite.height = this.uiScale
-				obj.sprite.tint = 0xffffff
+				obj.sprite.tint = Colors.WHITE
 				if (obj.sprite.scale.x < 0) obj.sprite.scale.x = -1 * obj.sprite.scale.x
 
 				obj.graphic.clear()
@@ -812,7 +818,7 @@ export class NoteRender {
 		} else {
 			let thicc = 20
 			let textStyle = new PIXI.TextStyle({ fontSize: thicc, fill: "white" })
-			let color = 0x333333
+			let color = Colors.GRAY
 
 			let base = new PIXI.Graphics()
 			let text = new PIXI.Text("RESET", textStyle)

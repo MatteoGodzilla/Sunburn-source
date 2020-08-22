@@ -21,7 +21,7 @@ export enum noteTypes {
 	SCR_B_ZONE,
 	FX_ALL,
 	CROSS_FORCE_CENTER,
-	BATTLE_SWITCH = 26,
+	BATTLE_MARKER = 26,
 	CF_SPIKE_G,
 	CF_SPIKE_B,
 	CF_SPIKE_C,
@@ -99,7 +99,7 @@ export function getTypeStringName(type: noteTypes) {
 			return "Effects All"
 		case noteTypes.CROSS_FORCE_CENTER:
 			return "Crossfade Force Center"
-		case noteTypes.BATTLE_SWITCH:
+		case noteTypes.BATTLE_MARKER:
 			return "DJ Battle Marker"
 		case noteTypes.CF_SPIKE_G:
 			return "Crossfade Spike Green"

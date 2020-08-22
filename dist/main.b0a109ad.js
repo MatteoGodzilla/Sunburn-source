@@ -48748,7 +48748,7 @@ exports.noteTypes = noteTypes;
   noteTypes[noteTypes["SCR_B_ZONE"] = 21] = "SCR_B_ZONE";
   noteTypes[noteTypes["FX_ALL"] = 22] = "FX_ALL";
   noteTypes[noteTypes["CROSS_FORCE_CENTER"] = 23] = "CROSS_FORCE_CENTER";
-  noteTypes[noteTypes["BATTLE_SWITCH"] = 26] = "BATTLE_SWITCH";
+  noteTypes[noteTypes["BATTLE_MARKER"] = 26] = "BATTLE_MARKER";
   noteTypes[noteTypes["CF_SPIKE_G"] = 27] = "CF_SPIKE_G";
   noteTypes[noteTypes["CF_SPIKE_B"] = 28] = "CF_SPIKE_B";
   noteTypes[noteTypes["CF_SPIKE_C"] = 29] = "CF_SPIKE_C";
@@ -48839,7 +48839,7 @@ function getTypeStringName(type) {
     case noteTypes.CROSS_FORCE_CENTER:
       return "Crossfade Force Center";
 
-    case noteTypes.BATTLE_SWITCH:
+    case noteTypes.BATTLE_MARKER:
       return "DJ Battle Marker";
 
     case noteTypes.CF_SPIKE_G:
@@ -48958,6 +48958,8 @@ var NoteLoader = /*#__PURE__*/function () {
           if (length && stringLength) {
             var bpm = 120;
             var spikeCenter = false;
+            var spikeChainStarted = false;
+            var spikeChainTime = 0;
             var lastNote = {
               time: 0,
               lane: 1,
@@ -48996,19 +48998,28 @@ var NoteLoader = /*#__PURE__*/function () {
                 lastFakeBPMTime = t;
               }
 
-              if (!spikeCenter && (type === _CustomTypes.noteTypes.CF_SPIKE_G && lastNote.type === _CustomTypes.noteTypes.CF_SPIKE_B || type === _CustomTypes.noteTypes.CF_SPIKE_B && lastNote.type === _CustomTypes.noteTypes.CF_SPIKE_G)) {
-                spikeCenter = true;
-                var data = {
-                  time: lastNote.time,
-                  type: _CustomTypes.noteTypes.CROSS_C,
-                  lane: 1,
-                  length: lastNote.length,
-                  extra: lastNote.extra
-                };
-                arr.push(data);
+              if ((type === _CustomTypes.noteTypes.CF_SPIKE_B || type === _CustomTypes.noteTypes.CF_SPIKE_G) && bpmTime !== undefined) {
+                if (!spikeChainStarted) {
+                  spikeChainStarted = true;
+                  spikeChainTime = bpmTime;
+                } else if (!spikeCenter) {
+                  spikeCenter = true;
+                  var data = {
+                    time: lastNote.time,
+                    type: _CustomTypes.noteTypes.CROSS_C,
+                    lane: 1,
+                    length: lastNote.length,
+                    extra: lastNote.extra
+                  };
+                  arr.push(data);
+                }
               }
 
-              if (type === _CustomTypes.noteTypes.CROSS_G || type === _CustomTypes.noteTypes.CROSS_C || type === _CustomTypes.noteTypes.CROSS_B) spikeCenter = false; //time === 0 and type == 0 are valid
+              if (type === _CustomTypes.noteTypes.CROSS_G || type === _CustomTypes.noteTypes.CROSS_C || type === _CustomTypes.noteTypes.CROSS_B) {
+                spikeCenter = false;
+                spikeChainStarted = false;
+              } //time === 0 and type == 0 are valid
+
 
               if (bpmTime !== undefined && type !== undefined) {
                 if (type === _CustomTypes.noteTypes.REWIND) extra = 0;
@@ -49035,13 +49046,51 @@ var NoteLoader = /*#__PURE__*/function () {
               for (_iterator.s(); !(_step = _iterator.n()).done;) {
                 var d = _step.value;
                 d.lane = NoteLoader.getCrossAtTime(d.time, arr);
-              } //console.log("Loaded chart", arr)
 
+                if (d.type === _CustomTypes.noteTypes.FX_G || d.type === _CustomTypes.noteTypes.FX_B || d.type === _CustomTypes.noteTypes.FX_R || d.type === _CustomTypes.noteTypes.FX_ALL) {
+                  //check if fx type is specified
+                  var present = false;
+                  var fxTypes = [_CustomTypes.noteTypes.FX_FILTER, _CustomTypes.noteTypes.FX_BEATROLL, _CustomTypes.noteTypes.FX_BITREDUCTION, _CustomTypes.noteTypes.FX_WAHWAH, _CustomTypes.noteTypes.FX_RINGMOD, _CustomTypes.noteTypes.FX_STUTTER, _CustomTypes.noteTypes.FX_FLANGER, _CustomTypes.noteTypes.FX_ROBOT, _CustomTypes.noteTypes.FX_BEATROLLAUTO, _CustomTypes.noteTypes.FX_DELAY];
+
+                  var _iterator2 = _createForOfIteratorHelper(arr),
+                      _step2;
+
+                  try {
+                    for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+                      var check = _step2.value;
+
+                      if (fxTypes.includes(check.type) && check.time === d.time) {
+                        present = true;
+                        break;
+                      }
+                    }
+                  } catch (err) {
+                    _iterator2.e(err);
+                  } finally {
+                    _iterator2.f();
+                  }
+
+                  if (!present) {
+                    var _data2 = {
+                      time: d.time,
+                      type: _CustomTypes.noteTypes.FX_FILTER,
+                      lane: d.lane,
+                      length: d.length,
+                      extra: 0
+                    };
+                    arr.push(_data2);
+                  }
+                }
+              }
             } catch (err) {
               _iterator.e(err);
             } finally {
               _iterator.f();
             }
+
+            arr.sort(function (a, b) {
+              return a.time - b.time;
+            }); //console.log("Loaded chart", arr)
 
             return bpm;
           }
@@ -49083,21 +49132,21 @@ var NoteLoader = /*#__PURE__*/function () {
     value: function getCrossAtTime(time, arr) {
       var cross = 1;
 
-      var _iterator2 = _createForOfIteratorHelper(arr),
-          _step2;
+      var _iterator3 = _createForOfIteratorHelper(arr),
+          _step3;
 
       try {
-        for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-          var note = _step2.value;
+        for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+          var note = _step3.value;
 
           if (note.time <= time) {
             if (note.type === _CustomTypes.noteTypes.CROSS_G) cross = 0;else if (note.type === _CustomTypes.noteTypes.CROSS_C) cross = 1;else if (note.type === _CustomTypes.noteTypes.CROSS_B) cross = 2;
           } else if (note.time > time) break;
         }
       } catch (err) {
-        _iterator2.e(err);
+        _iterator3.e(err);
       } finally {
-        _iterator2.f();
+        _iterator3.f();
       }
 
       return cross;
@@ -49187,6 +49236,18 @@ var Layers;
   Layers[Layers["NOTE"] = 3] = "NOTE";
 })(Layers || (Layers = {}));
 
+var Colors;
+
+(function (Colors) {
+  Colors[Colors["GREEN"] = 2285358] = "GREEN";
+  Colors[Colors["RED"] = 13769756] = "RED";
+  Colors[Colors["BLUE"] = 4017854] = "BLUE";
+  Colors[Colors["WHITE"] = 16777215] = "WHITE";
+  Colors[Colors["ORANGE"] = 15427608] = "ORANGE";
+  Colors[Colors["GRAY"] = 3355443] = "GRAY";
+  Colors[Colors["HIGHLIGHT"] = 16763904] = "HIGHLIGHT";
+})(Colors || (Colors = {}));
+
 var NoteRender = /*#__PURE__*/function () {
   function NoteRender(app) {
     var _this = this;
@@ -49197,7 +49258,9 @@ var NoteRender = /*#__PURE__*/function () {
     this.uiScale = 75;
     this.timeScale = 100;
     this.clickerOffset = 100;
+    this.bpmResolution = 1 / 4;
     this.crossPosition = 1;
+    this.padding = 10;
     this.clickerBaseLeft = new PIXI.Sprite();
     this.clickerBaseRight = new PIXI.Sprite();
     this.clickerGreen = new PIXI.Sprite();
@@ -49263,7 +49326,7 @@ var NoteRender = /*#__PURE__*/function () {
       redLanePoints.push(new PIXI.Point(0, -renderHeight));
       _this.redGraphic = new PIXI.Graphics();
 
-      _this.redGraphic.lineStyle(_this.lineWidth, 0xff0000);
+      _this.redGraphic.lineStyle(_this.lineWidth, Colors.RED);
 
       redLanePoints.forEach(function (point) {
         _this.redGraphic.lineTo(point.x, point.y);
@@ -49273,18 +49336,18 @@ var NoteRender = /*#__PURE__*/function () {
 
       _this.greenGraphic = new PIXI.Graphics();
 
-      _this.greenGraphic.lineStyle(_this.lineWidth, 0x00ff00);
+      _this.greenGraphic.lineStyle(_this.lineWidth, Colors.GREEN);
 
       _this.container.addChild(_this.greenGraphic);
 
       _this.blueGraphic = new PIXI.Graphics();
 
-      _this.blueGraphic.lineStyle(_this.lineWidth, 0x00ff00);
+      _this.blueGraphic.lineStyle(_this.lineWidth, Colors.BLUE);
 
       _this.container.addChild(_this.blueGraphic);
     });
     /*
-    let test = new PIXI.Text("ASDFASDF",new PIXI.TextStyle({fill:0xffffff}))
+    let test = new PIXI.Text("ASDFASDF",new PIXI.TextStyle({fill:Colors.WHITE}))
     test.position.set(0,500)
     test.text = "CHANGED"
     this.container.addChild(test)
@@ -49318,6 +49381,7 @@ var NoteRender = /*#__PURE__*/function () {
       var redLanePoints = [];
       this.greenGraphic.clear();
       this.blueGraphic.clear();
+      this.redGraphic.clear();
 
       for (var y = 0; y < renderHeight; y++) {
         var t = this.time + this.timeScale * (y / renderHeight);
@@ -49351,7 +49415,7 @@ var NoteRender = /*#__PURE__*/function () {
           _this2.greenGraphic.lineTo(lastGreenPoint.x, point.y);
         }
 
-        _this2.greenGraphic.lineStyle(_this2.lineWidth, 0x00ff00);
+        _this2.greenGraphic.lineStyle(_this2.lineWidth, Colors.GREEN);
 
         _this2.greenGraphic.lineTo(point.x, point.y);
 
@@ -49372,7 +49436,7 @@ var NoteRender = /*#__PURE__*/function () {
           _this2.blueGraphic.lineTo(lastBluePoint.x, point.y);
         }
 
-        _this2.blueGraphic.lineStyle(_this2.lineWidth, 0x0000ff);
+        _this2.blueGraphic.lineStyle(_this2.lineWidth, Colors.BLUE);
 
         _this2.blueGraphic.lineTo(point.x, point.y);
 
@@ -49380,7 +49444,7 @@ var NoteRender = /*#__PURE__*/function () {
       });
       redLanePoints.push(new PIXI.Point(0, 0));
       redLanePoints.push(new PIXI.Point(0, -renderHeight));
-      this.redGraphic.lineStyle(this.lineWidth, 0xff0000);
+      this.redGraphic.lineStyle(this.lineWidth, Colors.RED);
       redLanePoints.forEach(function (point) {
         _this2.redGraphic.lineTo(point.x, point.y);
       });
@@ -49408,7 +49472,7 @@ var NoteRender = /*#__PURE__*/function () {
             if (note.length > 0.0625) {
               var crossfades = [];
               var width = 40;
-              graphicsObject.graphic.beginFill(0xffffff, 0.5);
+              graphicsObject.graphic.beginFill(Colors.WHITE, 0.5);
 
               var _iterator = _createForOfIteratorHelper(arr),
                   _step;
@@ -49483,7 +49547,7 @@ var NoteRender = /*#__PURE__*/function () {
 
               var _startHeight = this.getYfromTime(note.time + note.length, renderHeight);
 
-              graphicsObject.graphic.beginFill(0xffffff, 0.5);
+              graphicsObject.graphic.beginFill(Colors.WHITE, 0.5);
               graphicsObject.graphic.drawRect(x - _width / 2, _startHeight, _width, _y - _startHeight);
             }
           } else if (note.type === _CustomTypes.noteTypes.TAP_B || note.type === _CustomTypes.noteTypes.SCR_B_UP || note.type === _CustomTypes.noteTypes.SCR_B_DOWN || note.type === _CustomTypes.noteTypes.SCR_B_ANYDIR) {
@@ -49496,7 +49560,7 @@ var NoteRender = /*#__PURE__*/function () {
             if (note.length > 0.0625) {
               var _crossfades = [];
               var _width2 = 40;
-              graphicsObject.graphic.beginFill(0xffffff, 0.5);
+              graphicsObject.graphic.beginFill(Colors.WHITE, 0.5);
 
               var _iterator3 = _createForOfIteratorHelper(arr),
                   _step3;
@@ -49566,43 +49630,43 @@ var NoteRender = /*#__PURE__*/function () {
           } else if (note.type === _CustomTypes.noteTypes.FX_G) {
             x -= 2.5 * this.uiScale;
             graphicsObject = this.getSprite(note.type);
-            graphicsObject.graphic.beginFill(0xff7000, 0.25);
+            graphicsObject.graphic.beginFill(Colors.ORANGE, 0.25);
             graphicsObject.graphic.zIndex = Layers.EFFECTS;
 
             var _startHeight3 = this.getYfromTime(note.time + note.length, renderHeight);
 
-            graphicsObject.graphic.drawRect(x, _startHeight3, this.uiScale * 2, _y - _startHeight3);
+            graphicsObject.graphic.drawRect(x, _startHeight3 + this.padding, this.uiScale * 2, _y - _startHeight3 - this.padding);
           } else if (note.type === _CustomTypes.noteTypes.FX_B) {
             x += 0.5 * this.uiScale;
             graphicsObject = this.getSprite(note.type);
-            graphicsObject.graphic.beginFill(0xff7000, 0.25);
+            graphicsObject.graphic.beginFill(Colors.ORANGE, 0.25);
             graphicsObject.graphic.zIndex = Layers.EFFECTS;
 
             var _startHeight4 = this.getYfromTime(note.time + note.length, renderHeight);
 
-            graphicsObject.graphic.drawRect(x, _startHeight4, this.uiScale * 2, _y - _startHeight4);
+            graphicsObject.graphic.drawRect(x, _startHeight4 + this.padding, this.uiScale * 2, _y - _startHeight4 - this.padding);
           } else if (note.type === _CustomTypes.noteTypes.FX_R) {
             x -= 0.5 * this.uiScale;
             graphicsObject = this.getSprite(note.type);
-            graphicsObject.graphic.beginFill(0xff7000, 0.25);
+            graphicsObject.graphic.beginFill(Colors.ORANGE, 0.25);
             graphicsObject.graphic.zIndex = Layers.EFFECTS;
 
             var _startHeight5 = this.getYfromTime(note.time + note.length, renderHeight);
 
-            graphicsObject.graphic.drawRect(x, _startHeight5, this.uiScale * 1, _y - _startHeight5);
+            graphicsObject.graphic.drawRect(x, _startHeight5 + this.padding, this.uiScale * 1, _y - _startHeight5 - this.padding);
           } else if (note.type === _CustomTypes.noteTypes.FX_ALL) {
             x -= 2.5 * this.uiScale;
             graphicsObject = this.getSprite(note.type);
-            graphicsObject.graphic.beginFill(0xff7000, 0.25);
+            graphicsObject.graphic.beginFill(Colors.ORANGE, 0.25);
             graphicsObject.graphic.zIndex = Layers.EFFECTS;
 
             var _startHeight6 = this.getYfromTime(note.time + note.length, renderHeight);
 
-            graphicsObject.graphic.drawRect(x, _startHeight6, this.uiScale * 5, _y - _startHeight6);
+            graphicsObject.graphic.drawRect(x, _startHeight6 + this.padding, this.uiScale * 5, _y - _startHeight6 - this.padding);
           } else if (note.type === _CustomTypes.noteTypes.EUPHORIA) {
             x -= 2.5 * this.uiScale;
             graphicsObject = this.getSprite(note.type);
-            graphicsObject.graphic.beginFill(0xffffff, 0.25);
+            graphicsObject.graphic.beginFill(Colors.WHITE, 0.25);
             graphicsObject.graphic.zIndex = Layers.EUPHORIA;
 
             var _startHeight7 = this.getYfromTime(note.time + note.length, renderHeight);
@@ -49616,7 +49680,7 @@ var NoteRender = /*#__PURE__*/function () {
             graphicsObject.graphic.zIndex = Layers.EUPHORIA;
             graphicsObject.sprite.zIndex = Layers.NOTE;
             graphicsObject.sprite.position.set(x, _y);
-            graphicsObject.graphic.beginFill(0xff0000, 0.75);
+            graphicsObject.graphic.beginFill(Colors.RED, 0.75);
             graphicsObject.graphic.drawRect(x - this.uiScale / 2, _startHeight8, this.uiScale * 1, _y - _startHeight8);
           } else if (note.type === _CustomTypes.noteTypes.FS_CROSS) {
             graphicsObject = this.getSprite(note.type);
@@ -49626,16 +49690,16 @@ var NoteRender = /*#__PURE__*/function () {
             graphicsObject.graphic.zIndex = Layers.EUPHORIA;
             var xLeft = app.renderer.width / 2 - this.uiScale * 2;
             var xRight = app.renderer.width / 2 + this.uiScale * 1;
-            graphicsObject.graphic.beginFill(0x00ff00, 0.25);
+            graphicsObject.graphic.beginFill(Colors.GREEN, 0.25);
             graphicsObject.graphic.drawRect(xLeft, _startHeight9, this.uiScale * 1, _y - _startHeight9);
-            graphicsObject.graphic.beginFill(0x0000ff, 0.25);
+            graphicsObject.graphic.beginFill(Colors.BLUE, 0.25);
             graphicsObject.graphic.drawRect(xRight, _startHeight9, this.uiScale * 1, _y - _startHeight9);
           } else if (note.type === _CustomTypes.noteTypes.SCR_G_ZONE) {
             x -= (note.lane == 0 ? 2 : 1) * this.uiScale;
             var _crossfades2 = [];
             var _width3 = this.uiScale;
             graphicsObject = this.getSprite(note.type);
-            graphicsObject.graphic.beginFill(0x00ff00, 1.0);
+            graphicsObject.graphic.beginFill(Colors.GREEN, 1.0);
             graphicsObject.graphic.zIndex = Layers.SCRATCH_ZONE;
 
             var _iterator5 = _createForOfIteratorHelper(arr),
@@ -49707,7 +49771,7 @@ var NoteRender = /*#__PURE__*/function () {
             var _crossfades3 = [];
             var _width4 = this.uiScale;
             graphicsObject = this.getSprite(note.type);
-            graphicsObject.graphic.beginFill(0x0000ff, 1.0);
+            graphicsObject.graphic.beginFill(Colors.BLUE, 1.0);
             graphicsObject.graphic.zIndex = Layers.SCRATCH_ZONE;
 
             var _iterator7 = _createForOfIteratorHelper(arr),
@@ -49781,10 +49845,9 @@ var NoteRender = /*#__PURE__*/function () {
 
             var _width5 = this.uiScale / 5;
 
-            var margin = 10;
             graphicsObject.graphic.zIndex = Layers.EUPHORIA;
-            graphicsObject.graphic.beginFill(0x00ff00, 1.0);
-            graphicsObject.graphic.drawRect(x - this.uiScale * 2, _startHeight12 + margin / 2, _width5, _y - _startHeight12 - margin / 2);
+            graphicsObject.graphic.beginFill(Colors.GREEN, 1.0);
+            graphicsObject.graphic.drawRect(x - this.uiScale * 2, _startHeight12 + this.padding / 2, _width5, _y - _startHeight12 - this.padding / 2);
           } else if (note.type === _CustomTypes.noteTypes.FS_CF_B_MARKER) {
             graphicsObject = this.getSprite(note.type);
 
@@ -49792,10 +49855,9 @@ var NoteRender = /*#__PURE__*/function () {
 
             var _width6 = this.uiScale / 5;
 
-            var _margin = 10;
             graphicsObject.graphic.zIndex = Layers.EUPHORIA;
-            graphicsObject.graphic.beginFill(0x0000ff, 1.0);
-            graphicsObject.graphic.drawRect(x + this.uiScale * 2 - _width6, _startHeight13 + _margin / 2, _width6, _y - _startHeight13 - _margin / 2);
+            graphicsObject.graphic.beginFill(Colors.BLUE, 1.0);
+            graphicsObject.graphic.drawRect(x + this.uiScale * 2 - _width6, _startHeight13 + this.padding / 2, _width6, _y - _startHeight13 - this.padding / 2);
           } else if (note.type === _CustomTypes.noteTypes.CF_SPIKE_G) {
             x -= this.uiScale * 1.5;
             graphicsObject = this.getSprite(note.type);
@@ -49842,7 +49904,7 @@ var NoteRender = /*#__PURE__*/function () {
             graphicsObject.sprite.scale.x = -1 * graphicsObject.sprite.scale.x;
             graphicsObject.sprite.position.set(x, _y);
             graphicsObject.sprite.zIndex = Layers.NOTE;
-          } else if (note.type === _CustomTypes.noteTypes.BPM || note.type === _CustomTypes.noteTypes.BPM_FAKE) {
+          } else if (note.type === _CustomTypes.noteTypes.BPM_FAKE) {
             var ev = this.getEvent();
             x -= this.uiScale * 4; //let lengthY = renderHeight - ((note.time + note.length - this.time) / this.timeScale) * renderHeight
 
@@ -49862,14 +49924,14 @@ var NoteRender = /*#__PURE__*/function () {
             ev.base.position.set(x, _y - ev.base.height / 2); //ev.length.position.set(x - (this.uiScale - ev.base.height) / 2, lengthY)
             //ev.length.height = y - lengthY
 
-            var text = (note.type === _CustomTypes.noteTypes.BPM ? "BPM:" : "FAKE:") + note.extra.toFixed(0);
+            var text = note.extra.toFixed(0);
             /* for(let value in noteTypes){
                 if(Number(value) && value === note.type.toString()) text = noteTypes[value]
             } */
 
             ev.text.text = text;
             ev.text.position.set(x + this.uiScale / 2, _y);
-          } else if (note.type !== _CustomTypes.noteTypes.CROSS_G && note.type !== _CustomTypes.noteTypes.CROSS_B && note.type !== _CustomTypes.noteTypes.CROSS_C) {
+          } else if (note.type !== _CustomTypes.noteTypes.CROSS_G && note.type !== _CustomTypes.noteTypes.CROSS_B && note.type !== _CustomTypes.noteTypes.CROSS_C && note.type !== _CustomTypes.noteTypes.BPM) {
             var _ev = this.getEvent();
 
             x += this.uiScale * 3;
@@ -49881,7 +49943,7 @@ var NoteRender = /*#__PURE__*/function () {
 
                 var _afterHeight = _after.base.y + _after.base.height / 2;
 
-                if (_y >= _afterHeight && lengthYPos < _afterHeight && _after.base.x > app.renderer.width / 2) {
+                if (_y >= _afterHeight && lengthYPos <= _afterHeight && _after.base.x > app.renderer.width / 2) {
                   this.events[_i2].base.x += this.uiScale * 1.5;
                   this.events[_i2].length.x += this.uiScale * 1.5;
                   this.events[_i2].text.x += this.uiScale * 1.5;
@@ -49908,7 +49970,7 @@ var NoteRender = /*#__PURE__*/function () {
 
           if (graphicsObject) {
             if (note.selected) {
-              graphicsObject.sprite.tint = 0x00ff00;
+              graphicsObject.sprite.tint = Colors.HIGHLIGHT;
             }
           }
         }
@@ -49919,7 +49981,6 @@ var NoteRender = /*#__PURE__*/function () {
     value: function bpmRender(app, notes, baseBPM) {
       this.bpmContainer.removeChildren();
       var renderHeight = app.renderer.height - this.clickerOffset;
-      var resolution = 1 / 4;
 
       for (var t = this.time; t < this.time + this.timeScale;) {
         var lastBPMChange = {
@@ -49944,12 +50005,11 @@ var NoteRender = /*#__PURE__*/function () {
           _iterator9.f();
         }
 
-        var tickDelta = resolution * baseBPM / lastBPMChange.extra;
+        var tickDelta = this.bpmResolution * baseBPM / lastBPMChange.extra;
         var closestBeat = Math.ceil((t - lastBPMChange.time) / tickDelta) * tickDelta + lastBPMChange.time;
         var y = renderHeight - (closestBeat - this.time) / this.timeScale * renderHeight;
         var g = new PIXI.Graphics();
-        g.beginFill(0x333333); //if (Math.floor(i) === i) g.beginFill(0x555555)
-
+        g.beginFill(Colors.GRAY);
         var height = 20;
         g.drawRect(app.renderer.width / 2 - 2 * this.uiScale, y - height / 2, 4 * this.uiScale, height);
         this.bpmContainer.addChild(g);
@@ -50064,7 +50124,7 @@ var NoteRender = /*#__PURE__*/function () {
             obj.sprite.position.set(120000, 120000);
             obj.sprite.width = _this3.uiScale;
             obj.sprite.height = _this3.uiScale;
-            obj.sprite.tint = 0xffffff;
+            obj.sprite.tint = Colors.WHITE;
             if (obj.sprite.scale.x < 0) obj.sprite.scale.x = -1 * obj.sprite.scale.x;
             obj.graphic.clear();
           });
@@ -50089,7 +50149,7 @@ var NoteRender = /*#__PURE__*/function () {
           fontSize: thicc,
           fill: "white"
         });
-        var color = 0x333333;
+        var color = Colors.GRAY;
         var base = new PIXI.Graphics();
         var text = new PIXI.Text("RESET", textStyle);
         var length = new PIXI.Graphics();
@@ -53517,11 +53577,13 @@ exports.NoteExporter = NoteExporter;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.NoteManager = void 0;
+exports.NoteManager = exports.NoteClass = exports.Modes = void 0;
 
 var PIXI = _interopRequireWildcard(require("pixi.js"));
 
 var _CustomTypes = require("./CustomTypes");
+
+var _NoteLoader = require("./NoteLoader");
 
 function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
 
@@ -53540,12 +53602,25 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 var Modes;
+exports.Modes = Modes;
 
 (function (Modes) {
-  Modes[Modes["select"] = 0] = "select";
-  Modes[Modes["add"] = 1] = "add";
-  Modes[Modes["remove"] = 2] = "remove";
-})(Modes || (Modes = {}));
+  Modes[Modes["add"] = 0] = "add";
+  Modes[Modes["select"] = 1] = "select";
+  Modes[Modes["delete"] = 2] = "delete";
+})(Modes || (exports.Modes = Modes = {}));
+
+var NoteClass;
+exports.NoteClass = NoteClass;
+
+(function (NoteClass) {
+  NoteClass[NoteClass["TAP"] = 0] = "TAP";
+  NoteClass[NoteClass["SCRATCH"] = 1] = "SCRATCH";
+  NoteClass[NoteClass["CROSS"] = 2] = "CROSS";
+  NoteClass[NoteClass["FX"] = 3] = "FX";
+  NoteClass[NoteClass["FS"] = 4] = "FS";
+  NoteClass[NoteClass["EVENTS"] = 5] = "EVENTS";
+})(NoteClass || (exports.NoteClass = NoteClass = {}));
 
 var NoteManager = /*#__PURE__*/function () {
   function NoteManager(app, notes) {
@@ -53554,6 +53629,9 @@ var NoteManager = /*#__PURE__*/function () {
     this.notes = [];
     this.selectedTime = 0;
     this.mode = Modes.select;
+    this.noteClass = NoteClass.TAP;
+    this.lastCandidates = [];
+    this.lastCandidateIndex = 0;
     this.selectedNote = {
       type: 0,
       time: 0,
@@ -53569,235 +53647,583 @@ var NoteManager = /*#__PURE__*/function () {
 
   _createClass(NoteManager, [{
     key: "mouseHandler",
-    value: function mouseHandler(ev, app, noteRender) {
-      if (this.mode === Modes.add) {
-        if (ev.type === "mouseup") {
-          if (ev.x > app.renderer.width / 2 - noteRender.uiScale * 2.5 && ev.x < app.renderer.width / 2 - noteRender.uiScale / 2) {
-            if (ev.which === 1) {
-              var present = false;
+    value: function mouseHandler(ev, app, noteRender, baseBPM) {
+      var _this = this;
 
-              var _iterator = _createForOfIteratorHelper(this.notes),
-                  _step;
+      var lane = this.getLane(ev, app, noteRender.uiScale);
 
-              try {
-                for (_iterator.s(); !(_step = _iterator.n()).done;) {
-                  var note = _step.value;
+      if (ev.type === "mousedown") {
+        if (ev.which === 1) {
+          if (this.mode === Modes.add) {
+            var mouseTime = this.getTimeFromY(ev, app, noteRender);
+            var lastBPMChange = {
+              time: 0,
+              type: 0,
+              length: 0,
+              lane: 0,
+              extra: 0
+            };
 
-                  if (note.type === _CustomTypes.noteTypes.TAP_G && note.time === this.selectedTime) {
-                    present = true;
-                    break;
-                  }
-                }
-              } catch (err) {
-                _iterator.e(err);
-              } finally {
-                _iterator.f();
+            var _iterator = _createForOfIteratorHelper(this.notes),
+                _step;
+
+            try {
+              for (_iterator.s(); !(_step = _iterator.n()).done;) {
+                var _n11 = _step.value;
+                if ((_n11.type === _CustomTypes.noteTypes.BPM || _n11.type === _CustomTypes.noteTypes.BPM_FAKE) && _n11.time <= mouseTime) lastBPMChange = _n11;
               }
-
-              if (!present) {
-                this.notes.push({
-                  time: this.selectedTime,
-                  type: _CustomTypes.noteTypes.TAP_G,
-                  length: 0,
-                  extra: 0,
-                  lane: 1
-                });
-              }
-            } else {
-              var match;
-
-              var _iterator2 = _createForOfIteratorHelper(this.notes),
-                  _step2;
-
-              try {
-                for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-                  var _note = _step2.value;
-
-                  if (_note.type === _CustomTypes.noteTypes.TAP_G && _note.time === this.selectedTime) {
-                    match = _note;
-                    break;
-                  }
-                }
-              } catch (err) {
-                _iterator2.e(err);
-              } finally {
-                _iterator2.f();
-              }
-
-              if (match) this.notes.splice(this.notes.indexOf(match), 1);
+            } catch (err) {
+              _iterator.e(err);
+            } finally {
+              _iterator.f();
             }
-          } else if (ev.x >= app.renderer.width / 2 + noteRender.uiScale / 2 && ev.x < app.renderer.width / 2 + noteRender.uiScale * 2.5) {
-            if (ev.which === 1) {
-              var _present = false;
 
-              var _iterator3 = _createForOfIteratorHelper(this.notes),
-                  _step3;
+            var tickDelta = noteRender.bpmResolution * baseBPM / lastBPMChange.extra;
+            var closestBeat = Math.round((mouseTime - lastBPMChange.time) / tickDelta) * tickDelta + lastBPMChange.time;
+            var data = {
+              type: _CustomTypes.noteTypes.TAP_G,
+              time: closestBeat,
+              length: 0,
+              extra: 0,
+              lane: 1
+            };
 
-              try {
-                for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-                  var _note2 = _step3.value;
+            if (this.noteClass === NoteClass.TAP) {
+              if (lane === -2 || lane === -1) {
+                //GREEN TAP
+                var present = false;
 
-                  if (_note2.type === _CustomTypes.noteTypes.TAP_B && _note2.time === this.selectedTime) {
-                    _present = true;
-                    break;
+                var _iterator2 = _createForOfIteratorHelper(this.notes),
+                    _step2;
+
+                try {
+                  for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+                    var n = _step2.value;
+
+                    if (n.type === _CustomTypes.noteTypes.TAP_G && n.time === closestBeat) {
+                      present = true;
+                      break;
+                    }
                   }
+                } catch (err) {
+                  _iterator2.e(err);
+                } finally {
+                  _iterator2.f();
                 }
-              } catch (err) {
-                _iterator3.e(err);
-              } finally {
-                _iterator3.f();
-              }
 
-              if (!_present) {
-                this.notes.push({
-                  time: this.selectedTime,
-                  type: _CustomTypes.noteTypes.TAP_B,
-                  length: 0,
-                  extra: 0,
-                  lane: 1
-                });
-              }
-            } else {
-              var _match;
+                if (!present) {
+                  data.type = _CustomTypes.noteTypes.TAP_G;
+                  this.notes.push(data);
+                }
+              } else if (lane === 0) {
+                //RED TAP
+                var _present = false;
 
-              var _iterator4 = _createForOfIteratorHelper(this.notes),
-                  _step4;
+                var _iterator3 = _createForOfIteratorHelper(this.notes),
+                    _step3;
 
-              try {
-                for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
-                  var _note3 = _step4.value;
+                try {
+                  for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+                    var _n = _step3.value;
 
-                  if (_note3.type === _CustomTypes.noteTypes.TAP_B && _note3.time === this.selectedTime) {
-                    _match = _note3;
-                    break;
+                    if (_n.type === _CustomTypes.noteTypes.TAP_R && _n.time === closestBeat) {
+                      _present = true;
+                      break;
+                    }
                   }
+                } catch (err) {
+                  _iterator3.e(err);
+                } finally {
+                  _iterator3.f();
                 }
-              } catch (err) {
-                _iterator4.e(err);
-              } finally {
-                _iterator4.f();
-              }
 
-              if (_match) this.notes.splice(this.notes.indexOf(_match), 1);
+                if (!_present) {
+                  data.type = _CustomTypes.noteTypes.TAP_R;
+                  this.notes.push(data);
+                }
+              } else if (lane === 1 || lane === 2) {
+                //BLUE TAP
+                var _present2 = false;
+
+                var _iterator4 = _createForOfIteratorHelper(this.notes),
+                    _step4;
+
+                try {
+                  for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+                    var _n2 = _step4.value;
+
+                    if (_n2.type === _CustomTypes.noteTypes.TAP_B && _n2.time === closestBeat) {
+                      _present2 = true;
+                      break;
+                    }
+                  }
+                } catch (err) {
+                  _iterator4.e(err);
+                } finally {
+                  _iterator4.f();
+                }
+
+                if (!_present2) {
+                  data.type = _CustomTypes.noteTypes.TAP_B;
+                  this.notes.push(data);
+                }
+              }
+            } else if (this.noteClass === NoteClass.SCRATCH) {
+              if (lane === -2 || lane === -1) {
+                //GREEN
+                var _present3 = false;
+
+                var _iterator5 = _createForOfIteratorHelper(this.notes),
+                    _step5;
+
+                try {
+                  for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
+                    var _n3 = _step5.value;
+
+                    if ((_n3.type === _CustomTypes.noteTypes.SCR_G_UP || _n3.type === _CustomTypes.noteTypes.SCR_G_DOWN || _n3.type === _CustomTypes.noteTypes.SCR_G_ANYDIR) && _n3.time === closestBeat) {
+                      _present3 = true;
+                      break;
+                    }
+                  }
+                } catch (err) {
+                  _iterator5.e(err);
+                } finally {
+                  _iterator5.f();
+                }
+
+                if (!_present3) {
+                  if (this.selectedNote.type === _CustomTypes.noteTypes.SCR_G_UP) data.type = _CustomTypes.noteTypes.SCR_G_DOWN;else data.type = _CustomTypes.noteTypes.SCR_G_UP;
+                  this.notes.push(data);
+                }
+              } else if (lane === 1 || lane === 2) {
+                //BLUE
+                var _present4 = false;
+
+                var _iterator6 = _createForOfIteratorHelper(this.notes),
+                    _step6;
+
+                try {
+                  for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
+                    var _n4 = _step6.value;
+
+                    if ((_n4.type === _CustomTypes.noteTypes.SCR_B_UP || _n4.type === _CustomTypes.noteTypes.SCR_B_DOWN || _n4.type === _CustomTypes.noteTypes.SCR_B_ANYDIR) && _n4.time === closestBeat) {
+                      _present4 = true;
+                      break;
+                    }
+                  }
+                } catch (err) {
+                  _iterator6.e(err);
+                } finally {
+                  _iterator6.f();
+                }
+
+                if (!_present4) {
+                  if (this.selectedNote.type === _CustomTypes.noteTypes.SCR_B_UP) data.type = _CustomTypes.noteTypes.SCR_B_DOWN;else data.type = _CustomTypes.noteTypes.SCR_B_UP;
+                  this.notes.push(data);
+                }
+              }
+            } else if (this.noteClass === NoteClass.CROSS) {
+              if (lane === -2 || lane === -1) {
+                //GREEN CROSS
+                var _present5 = false;
+                var toEdit = this.notes[0];
+
+                var _iterator7 = _createForOfIteratorHelper(this.notes),
+                    _step7;
+
+                try {
+                  for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
+                    var _n5 = _step7.value;
+
+                    if ((_n5.type === _CustomTypes.noteTypes.CROSS_G || _n5.type === _CustomTypes.noteTypes.CROSS_C || _n5.type === _CustomTypes.noteTypes.CROSS_B) && _n5.time === closestBeat) {
+                      _present5 = true;
+                      toEdit = _n5;
+                      break;
+                    }
+                  }
+                } catch (err) {
+                  _iterator7.e(err);
+                } finally {
+                  _iterator7.f();
+                }
+
+                if (!_present5) {
+                  data.type = _CustomTypes.noteTypes.CROSS_G;
+                  this.notes.push(data);
+                } else {
+                  toEdit.type = _CustomTypes.noteTypes.CROSS_G;
+                }
+              } else if (lane === 0) {
+                //RED CROSS
+                var _present6 = false;
+                var _toEdit = this.notes[0];
+
+                var _iterator8 = _createForOfIteratorHelper(this.notes),
+                    _step8;
+
+                try {
+                  for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
+                    var _n6 = _step8.value;
+
+                    if ((_n6.type === _CustomTypes.noteTypes.CROSS_G || _n6.type === _CustomTypes.noteTypes.CROSS_C || _n6.type === _CustomTypes.noteTypes.CROSS_B) && _n6.time === closestBeat) {
+                      _present6 = true;
+                      _toEdit = _n6;
+                      break;
+                    }
+                  }
+                } catch (err) {
+                  _iterator8.e(err);
+                } finally {
+                  _iterator8.f();
+                }
+
+                if (!_present6) {
+                  data.type = _CustomTypes.noteTypes.CROSS_C;
+                  this.notes.push(data);
+                } else {
+                  _toEdit.type = _CustomTypes.noteTypes.CROSS_C;
+                }
+              } else if (lane === 1 || lane === 2) {
+                //BLUE CROSS
+                var _present7 = false;
+                var _toEdit2 = this.notes[0];
+
+                var _iterator9 = _createForOfIteratorHelper(this.notes),
+                    _step9;
+
+                try {
+                  for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
+                    var _n7 = _step9.value;
+
+                    if ((_n7.type === _CustomTypes.noteTypes.CROSS_G || _n7.type === _CustomTypes.noteTypes.CROSS_C || _n7.type === _CustomTypes.noteTypes.CROSS_B) && _n7.time === closestBeat) {
+                      _present7 = true;
+                      _toEdit2 = _n7;
+                      break;
+                    }
+                  }
+                } catch (err) {
+                  _iterator9.e(err);
+                } finally {
+                  _iterator9.f();
+                }
+
+                if (!_present7) {
+                  data.type = _CustomTypes.noteTypes.CROSS_B;
+                  this.notes.push(data);
+                } else {
+                  _toEdit2.type = _CustomTypes.noteTypes.CROSS_B;
+                }
+              }
+            } else if (this.noteClass === NoteClass.FX) {
+              if (lane === -2 || lane === -1) {
+                //GREEN FX
+                var _present8 = false;
+
+                var _iterator10 = _createForOfIteratorHelper(this.notes),
+                    _step10;
+
+                try {
+                  for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
+                    var _n8 = _step10.value;
+
+                    if (_n8.type === _CustomTypes.noteTypes.FX_G && _n8.time === closestBeat) {
+                      _present8 = true;
+                      break;
+                    }
+                  }
+                } catch (err) {
+                  _iterator10.e(err);
+                } finally {
+                  _iterator10.f();
+                }
+
+                if (!_present8) {
+                  var fx = {
+                    type: _CustomTypes.noteTypes.FX_FILTER,
+                    time: data.time,
+                    lane: 1,
+                    extra: 0,
+                    length: 0
+                  };
+                  data.type = _CustomTypes.noteTypes.FX_G;
+                  this.notes.push(data);
+                  this.notes.push(fx);
+                }
+              } else if (lane === 0) {
+                //ALL FX
+                var _present9 = false;
+
+                var _iterator11 = _createForOfIteratorHelper(this.notes),
+                    _step11;
+
+                try {
+                  for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
+                    var _n9 = _step11.value;
+
+                    if (_n9.type === _CustomTypes.noteTypes.FX_ALL && _n9.time === closestBeat) {
+                      _present9 = true;
+                      break;
+                    }
+                  }
+                } catch (err) {
+                  _iterator11.e(err);
+                } finally {
+                  _iterator11.f();
+                }
+
+                if (!_present9) {
+                  var _fx = {
+                    type: _CustomTypes.noteTypes.FX_FILTER,
+                    time: data.time,
+                    lane: 1,
+                    extra: 0,
+                    length: 0
+                  };
+                  data.type = _CustomTypes.noteTypes.FX_ALL;
+                  this.notes.push(data);
+                  this.notes.push(_fx);
+                }
+              } else if (lane === 1 || lane === 2) {
+                //BLUE FX
+                var _present10 = false;
+
+                var _iterator12 = _createForOfIteratorHelper(this.notes),
+                    _step12;
+
+                try {
+                  for (_iterator12.s(); !(_step12 = _iterator12.n()).done;) {
+                    var _n10 = _step12.value;
+
+                    if (_n10.type === _CustomTypes.noteTypes.FX_B && _n10.time === closestBeat) {
+                      _present10 = true;
+                      break;
+                    }
+                  }
+                } catch (err) {
+                  _iterator12.e(err);
+                } finally {
+                  _iterator12.f();
+                }
+
+                if (!_present10) {
+                  var _fx2 = {
+                    type: _CustomTypes.noteTypes.FX_FILTER,
+                    time: data.time,
+                    lane: 1,
+                    extra: 0,
+                    length: 0
+                  };
+                  data.type = _CustomTypes.noteTypes.FX_B;
+                  this.notes.push(data);
+                  this.notes.push(_fx2);
+                }
+              }
             }
-          } else if (ev.x >= app.renderer.width / 2 - noteRender.uiScale / 2 && ev.x < app.renderer.width / 2 + noteRender.uiScale / 2) {
-            if (ev.which === 1) {
-              var _present2 = false;
 
-              var _iterator5 = _createForOfIteratorHelper(this.notes),
-                  _step5;
-
-              try {
-                for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
-                  var _note4 = _step5.value;
-
-                  if (_note4.type === _CustomTypes.noteTypes.TAP_R && _note4.time === this.selectedTime) {
-                    _present2 = true;
-                    break;
-                  }
-                }
-              } catch (err) {
-                _iterator5.e(err);
-              } finally {
-                _iterator5.f();
-              }
-
-              if (!_present2) {
-                this.notes.push({
-                  time: this.selectedTime,
-                  type: _CustomTypes.noteTypes.TAP_R,
-                  length: 0,
-                  extra: 0,
-                  lane: 1
-                });
-              }
-            } else {
-              var _match2;
-
-              var _iterator6 = _createForOfIteratorHelper(this.notes),
-                  _step6;
-
-              try {
-                for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
-                  var _note5 = _step6.value;
-
-                  if (_note5.type === _CustomTypes.noteTypes.TAP_R && _note5.time === this.selectedTime) {
-                    _match2 = _note5;
-                    break;
-                  }
-                }
-              } catch (err) {
-                _iterator6.e(err);
-              } finally {
-                _iterator6.f();
-              }
-
-              if (_match2) this.notes.splice(this.notes.indexOf(_match2), 1);
-            }
-          }
-
-          this.notes.sort(function (a, b) {
-            return a.time - b.time;
-          });
-        } else if (ev.type === "mousemove") {
-          /*
-          //preview
-          if(ev.x > app.renderer.width/2 - noteRender.uiScale * 2.5 && ev.x < app.renderer.width/2 - noteRender.uiScale/2){
-              //green
-          } else if(ev.x >= app.renderer.width/2 + noteRender.uiScale/2 && ev.x < app.renderer.width/2 + noteRender.uiScale * 2.5){
-              //blue
-          } else {
-              //red
-          }
-                    */
-          var percent = (app.renderer.height - noteRender.clickerOffset - ev.y) / (app.renderer.height - noteRender.clickerOffset);
-
-          if (percent > 0) {
-            var beat = percent * noteRender.timeScale;
-            var timePartition = 1 / 4;
-            var closest = Math.round(beat / timePartition);
-            this.selectedTime = noteRender.time + closest * timePartition;
+            this.notes.sort(function (a, b) {
+              return a.time - b.time;
+            });
+            this.notes.forEach(function (n) {
+              n.lane = _NoteLoader.NoteLoader.getCrossAtTime(n.time, _this.notes);
+              n.selected = false;
+            });
+            this.selectedNote = data;
+            this.selectedNote.selected = true;
+            this.needsRefreshing = true; //console.log(this.notes.length)
           }
         }
-      } else if (this.mode === Modes.select) {
-        if (ev.type === "mouseup" && ev.which === 1) {
-          var _percent = (app.renderer.height - noteRender.clickerOffset - ev.y) / (app.renderer.height - noteRender.clickerOffset);
+      } else if (ev.type === "mousemove") {
+        if (ev.which === 3) {
+          //holding down right button
+          var _mouseTime = this.getTimeFromY(ev, app, noteRender);
 
-          this.selectedTime = noteRender.time + noteRender.timeScale * _percent;
-          var searchList = [];
+          var _lastBPMChange = {
+            time: 0,
+            type: 0,
+            length: 0,
+            lane: 0,
+            extra: 0
+          };
 
-          if (ev.x > app.renderer.width / 2 - noteRender.uiScale * 2.5 && ev.x < app.renderer.width / 2 - noteRender.uiScale / 2) {
-            searchList = [_CustomTypes.noteTypes.TAP_G, _CustomTypes.noteTypes.SCR_G_UP, _CustomTypes.noteTypes.SCR_G_DOWN, _CustomTypes.noteTypes.SCR_G_ANYDIR, _CustomTypes.noteTypes.CF_SPIKE_G];
-          } else if (ev.x >= app.renderer.width / 2 + noteRender.uiScale / 2 && ev.x < app.renderer.width / 2 + noteRender.uiScale * 2.5) {
-            searchList = [_CustomTypes.noteTypes.TAP_B, _CustomTypes.noteTypes.SCR_B_UP, _CustomTypes.noteTypes.SCR_B_DOWN, _CustomTypes.noteTypes.SCR_B_ANYDIR, _CustomTypes.noteTypes.CF_SPIKE_B];
-          } else {
-            searchList = [_CustomTypes.noteTypes.TAP_R];
-          }
-
-          var _iterator7 = _createForOfIteratorHelper(this.notes),
-              _step7;
+          var _iterator13 = _createForOfIteratorHelper(this.notes),
+              _step13;
 
           try {
-            for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
-              var n = _step7.value;
-
-              if (n.selected) {
-                n.selected = false;
-              }
-
-              if (searchList.includes(n.type) && Math.abs(n.time - this.selectedTime) < noteRender.timeScale / 20) {
-                this.selectedNote = n;
-                n.selected = true;
-                this.needsRefreshing = true;
-              }
+            for (_iterator13.s(); !(_step13 = _iterator13.n()).done;) {
+              var _n13 = _step13.value;
+              if ((_n13.type === _CustomTypes.noteTypes.BPM || _n13.type === _CustomTypes.noteTypes.BPM_FAKE) && _n13.time <= _mouseTime) _lastBPMChange = _n13;
             }
           } catch (err) {
-            _iterator7.e(err);
+            _iterator13.e(err);
           } finally {
-            _iterator7.f();
+            _iterator13.f();
           }
+
+          var _tickDelta = noteRender.bpmResolution * baseBPM / _lastBPMChange.extra;
+
+          var _closestBeat = Math.round((_mouseTime - _lastBPMChange.time) / _tickDelta) * _tickDelta + _lastBPMChange.time;
+
+          if (_closestBeat >= this.selectedNote.time) {
+            this.selectedNote.length = _closestBeat - this.selectedNote.time;
+
+            if (this.selectedNote.type === _CustomTypes.noteTypes.FX_G || this.selectedNote.type === _CustomTypes.noteTypes.FX_ALL || this.selectedNote.type === _CustomTypes.noteTypes.FX_B) {
+              var possible = [_CustomTypes.noteTypes.REWIND, _CustomTypes.noteTypes.STRING, _CustomTypes.noteTypes.FX_FILTER, _CustomTypes.noteTypes.FX_BEATROLL, _CustomTypes.noteTypes.FX_BITREDUCTION, _CustomTypes.noteTypes.FX_WAHWAH, _CustomTypes.noteTypes.FX_RINGMOD, _CustomTypes.noteTypes.FX_STUTTER, _CustomTypes.noteTypes.FX_FLANGER, _CustomTypes.noteTypes.FX_ROBOT, _CustomTypes.noteTypes.FX_BEATROLLAUTO, _CustomTypes.noteTypes.FX_DELAY, _CustomTypes.noteTypes.BATTLE_MARKER];
+
+              var _iterator14 = _createForOfIteratorHelper(this.notes),
+                  _step14;
+
+              try {
+                for (_iterator14.s(); !(_step14 = _iterator14.n()).done;) {
+                  var _n12 = _step14.value;
+                  if (possible.includes(_n12.type) && _n12.time === this.selectedNote.time) _n12.length = _closestBeat - this.selectedNote.time;
+                }
+              } catch (err) {
+                _iterator14.e(err);
+              } finally {
+                _iterator14.f();
+              }
+            }
+          }
+
+          this.needsRefreshing = true;
+        }
+      } else if (ev.type === "mouseup") {
+        if (this.mode === Modes.select) {
+          var selectables = [];
+
+          var _mouseTime2 = this.getTimeFromY(ev, app, noteRender);
+
+          if (lane === -3) {
+            //bpm
+            selectables = [_CustomTypes.noteTypes.BPM, _CustomTypes.noteTypes.BPM_FAKE];
+          } else if (lane === -2 || lane === -1) {
+            //green
+            if (this.noteClass == NoteClass.TAP) {
+              selectables = [_CustomTypes.noteTypes.TAP_G];
+            } else if (this.noteClass === NoteClass.SCRATCH) {
+              selectables = [_CustomTypes.noteTypes.SCR_G_UP, _CustomTypes.noteTypes.SCR_G_DOWN, _CustomTypes.noteTypes.SCR_G_ANYDIR];
+            } else if (this.noteClass === NoteClass.CROSS) {
+              selectables = [_CustomTypes.noteTypes.CROSS_C, _CustomTypes.noteTypes.CROSS_G, _CustomTypes.noteTypes.CF_SPIKE_G, _CustomTypes.noteTypes.CF_SPIKE_C];
+            } else if (this.noteClass === NoteClass.FX) {
+              selectables = [_CustomTypes.noteTypes.FX_G, _CustomTypes.noteTypes.FX_ALL];
+            } else if (this.noteClass === NoteClass.FS) {
+              if (lane === -1) {
+                selectables = [_CustomTypes.noteTypes.FS_CROSS];
+              } else {
+                selectables = [_CustomTypes.noteTypes.FS_CF_G_MARKER];
+              }
+            } else if (this.noteClass === NoteClass.EVENTS) {
+              selectables = [_CustomTypes.noteTypes.EUPHORIA, _CustomTypes.noteTypes.SCR_G_ZONE];
+            }
+          } else if (lane === 0) {
+            //red
+            if (this.noteClass === NoteClass.TAP) {
+              selectables = [_CustomTypes.noteTypes.TAP_R];
+            } else if (this.noteClass === NoteClass.FS) {
+              selectables = [_CustomTypes.noteTypes.FS_SAMPLES];
+            } else if (this.noteClass === NoteClass.EVENTS) {
+              selectables = [_CustomTypes.noteTypes.EUPHORIA];
+            }
+          } else if (lane === 1 || lane === 2) {
+            //blue
+            if (this.noteClass == NoteClass.TAP) {
+              selectables = [_CustomTypes.noteTypes.TAP_B];
+            } else if (this.noteClass === NoteClass.SCRATCH) {
+              selectables = [_CustomTypes.noteTypes.SCR_B_UP, _CustomTypes.noteTypes.SCR_B_DOWN, _CustomTypes.noteTypes.SCR_B_ANYDIR];
+            } else if (this.noteClass === NoteClass.CROSS) {
+              selectables = [_CustomTypes.noteTypes.CROSS_C, _CustomTypes.noteTypes.CROSS_B, _CustomTypes.noteTypes.CF_SPIKE_B, _CustomTypes.noteTypes.CF_SPIKE_B];
+            } else if (this.noteClass === NoteClass.FX) {
+              selectables = [_CustomTypes.noteTypes.FX_B, _CustomTypes.noteTypes.FX_ALL];
+            } else if (this.noteClass === NoteClass.FS) {
+              if (lane === 1) {
+                selectables = [_CustomTypes.noteTypes.FS_CROSS];
+              } else {
+                selectables = [_CustomTypes.noteTypes.FS_CF_B_MARKER];
+              }
+            } else if (this.noteClass === NoteClass.EVENTS) {
+              selectables = [_CustomTypes.noteTypes.EUPHORIA, _CustomTypes.noteTypes.SCR_B_ZONE];
+            }
+          } else if (lane === 3) {
+            //events
+            if (this.noteClass === NoteClass.EVENTS) {
+              selectables = [_CustomTypes.noteTypes.REWIND, _CustomTypes.noteTypes.STRING, _CustomTypes.noteTypes.FX_FILTER, _CustomTypes.noteTypes.FX_BEATROLL, _CustomTypes.noteTypes.FX_BITREDUCTION, _CustomTypes.noteTypes.FX_WAHWAH, _CustomTypes.noteTypes.FX_RINGMOD, _CustomTypes.noteTypes.FX_STUTTER, _CustomTypes.noteTypes.FX_FLANGER, _CustomTypes.noteTypes.FX_ROBOT, _CustomTypes.noteTypes.FX_BEATROLLAUTO, _CustomTypes.noteTypes.FX_DELAY, _CustomTypes.noteTypes.BATTLE_MARKER];
+            }
+          }
+
+          var candidates = [];
+
+          var _iterator15 = _createForOfIteratorHelper(this.notes),
+              _step15;
+
+          try {
+            for (_iterator15.s(); !(_step15 = _iterator15.n()).done;) {
+              var _n14 = _step15.value;
+
+              if (selectables.includes(_n14.type) && _mouseTime2 > _n14.time - 0.0625 && _mouseTime2 < _n14.time + _n14.length + 0.0625) {
+                candidates.push(_n14);
+              }
+
+              _n14.selected = false;
+            }
+          } catch (err) {
+            _iterator15.e(err);
+          } finally {
+            _iterator15.f();
+          }
+
+          if (candidates.length > 0) {
+            if (candidates.length === this.lastCandidates.length) {
+              //scroll into the same noteData
+              this.lastCandidateIndex = (this.lastCandidateIndex + 1) % candidates.length;
+              candidates[this.lastCandidateIndex].selected = true;
+              this.selectedNote = candidates[this.lastCandidateIndex];
+            } else {
+              //find closest match
+              var bestIndex = 0;
+
+              for (var i = 0; i < candidates.length; ++i) {
+                if (Math.abs(_mouseTime2 - candidates[i].time) < Math.abs(_mouseTime2 - candidates[bestIndex].time)) {
+                  bestIndex = i;
+                }
+              }
+
+              this.lastCandidateIndex = 0;
+              this.selectedNote = candidates[bestIndex];
+              candidates[bestIndex].selected = true;
+            }
+          }
+
+          this.needsRefreshing = true;
+          this.lastCandidates = candidates;
         }
       }
+    }
+  }, {
+    key: "getLane",
+    value: function getLane(ev, app, uiScale) {
+      var middle = app.renderer.width / 2;
+
+      if (ev.x < middle) {
+        if (ev.x > middle - uiScale / 2) return 0;else if (ev.x > middle - uiScale - uiScale / 2 && ev.x < middle - uiScale + uiScale / 2) return -1;else if (ev.x > middle - 2 * uiScale - uiScale / 2 && ev.x < middle - 2 * uiScale + uiScale / 2) return -2;else return -3;
+      } else {
+        if (ev.x < middle + uiScale / 2) return 0;else if (ev.x > middle + uiScale - uiScale / 2 && ev.x < middle + uiScale + uiScale / 2) return 1;else if (ev.x > middle + 2 * uiScale - uiScale / 2 && ev.x < middle + 2 * uiScale + uiScale / 2) return 2;else return 3;
+      }
+    }
+  }, {
+    key: "setNoteClass",
+    value: function setNoteClass(type) {
+      this.noteClass = type;
+    }
+  }, {
+    key: "setMode",
+    value: function setMode(mode) {
+      this.mode = mode;
+    }
+  }, {
+    key: "getTimeFromY",
+    value: function getTimeFromY(ev, app, noteRender) {
+      var renderHeight = app.renderer.height - noteRender.clickerOffset;
+      return (renderHeight - ev.y) / renderHeight * noteRender.timeScale + noteRender.time;
     }
   }]);
 
@@ -53805,7 +54231,7 @@ var NoteManager = /*#__PURE__*/function () {
 }();
 
 exports.NoteManager = NoteManager;
-},{"pixi.js":"node_modules/pixi.js/lib/pixi.es.js","./CustomTypes":"src/CustomTypes.ts"}],"src/main.ts":[function(require,module,exports) {
+},{"pixi.js":"node_modules/pixi.js/lib/pixi.es.js","./CustomTypes":"src/CustomTypes.ts","./NoteLoader":"src/NoteLoader.ts"}],"src/main.ts":[function(require,module,exports) {
 "use strict";
 
 var PIXI = _interopRequireWildcard(require("pixi.js"));
@@ -53826,21 +54252,26 @@ function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return 
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
-var _a, _b, _c, _d;
+function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e2) { throw _e2; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e3) { didErr = true; err = _e3; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
 
 var app = new PIXI.Application({
   width: window.innerWidth,
   height: window.innerHeight
 });
 document.body.appendChild(app.view);
-var inputBPM = document.getElementById("inputBPM");
-var inputPos = document.getElementById("inputPos");
-var inputTimeScale = document.getElementById("inputTimeScale");
-var inputUIScale = document.getElementById("inputUIScale");
-var inputNoteType = document.getElementById("inputNoteType");
-var inputNoteTime = document.getElementById("inputNoteTime");
-var inputNoteLength = document.getElementById("inputNoteLength");
-var notes = [];
+var notes = [{
+  type: _CustomTypes.noteTypes.BPM,
+  time: 0,
+  extra: 120,
+  lane: 1,
+  length: 0
+}];
 var noteRender = new _NoteRender.NoteRender(app);
 var noteManager = new _NoteManager.NoteManager(app, notes);
 var needsRefresh = false;
@@ -53850,6 +54281,113 @@ var sound = new _howler.Howl({
   src: [""]
 });
 sound.volume(0.25);
+var divStartPosition = {
+  x: 0,
+  y: 0
+};
+var divPosition = {
+  x: 10,
+  y: 10
+};
+var dragStart = {
+  x: -1,
+  y: -1
+};
+var isDragging = false;
+var divMain = document.getElementById("divMain");
+var inputBPM = document.getElementById("inputBPM");
+var inputPos = document.getElementById("inputPos");
+var inputTimeScale = document.getElementById("inputTimeScale");
+var inputUIScale = document.getElementById("inputUIScale");
+var inputBPMRes = document.getElementById("inputBPMRes");
+var divClassSelector = document.getElementById("divClass");
+var divModes = document.getElementById("divModes");
+var inputNoteType = document.getElementById("inputNoteType");
+var inputNoteTime = document.getElementById("inputNoteTime");
+var inputNoteLength = document.getElementById("inputNoteLength");
+var inputNoteExtra = document.getElementById("inputNoteExtra");
+(_a = document.getElementById("divTopBar")) === null || _a === void 0 ? void 0 : _a.addEventListener("mousedown", function (ev) {
+  divStartPosition.x = Number(getComputedStyle(divMain).left.slice(0, -2));
+  divStartPosition.y = Number(getComputedStyle(divMain).top.slice(0, -2));
+  dragStart = {
+    x: ev.x,
+    y: ev.y
+  };
+  isDragging = true;
+});
+(_b = document.getElementById("inputBPM")) === null || _b === void 0 ? void 0 : _b.addEventListener("change", function (ev) {
+  if (ev.srcElement) songBpm = Number(ev.srcElement.value);
+});
+(_c = document.getElementById("inputPos")) === null || _c === void 0 ? void 0 : _c.addEventListener("change", function (ev) {
+  if (ev.srcElement) noteRender.time = Number(ev.srcElement.value);
+});
+(_d = document.getElementById("inputTimeScale")) === null || _d === void 0 ? void 0 : _d.addEventListener("change", function (ev) {
+  if (ev.srcElement) timeWarp = Number(ev.srcElement.value);
+});
+(_e = document.getElementById("inputUIScale")) === null || _e === void 0 ? void 0 : _e.addEventListener("change", function (ev) {
+  if (ev.srcElement) noteRender.setScale(Number(ev.srcElement.value));
+});
+(_f = document.getElementById("inputBPMRes")) === null || _f === void 0 ? void 0 : _f.addEventListener("change", function (ev) {
+  if (ev.srcElement) {
+    var v = Number(ev.srcElement.value);
+    noteRender.bpmResolution = v !== 0 ? 1 / v : 0.25;
+  }
+});
+(_g = document.getElementById("inputNoteType")) === null || _g === void 0 ? void 0 : _g.addEventListener("change", function (ev) {
+  if (ev.srcElement) noteManager.selectedNote.type = Number(ev.srcElement.value);
+});
+(_h = document.getElementById("inputNoteTime")) === null || _h === void 0 ? void 0 : _h.addEventListener("change", function (ev) {
+  if (ev.srcElement) noteManager.selectedNote.time = Number(ev.srcElement.value);
+});
+(_j = document.getElementById("inputNoteLength")) === null || _j === void 0 ? void 0 : _j.addEventListener("change", function (ev) {
+  if (ev.srcElement) noteManager.selectedNote.length = Number(ev.srcElement.value);
+});
+(_k = document.getElementById("inputNoteExtra")) === null || _k === void 0 ? void 0 : _k.addEventListener("change", function (ev) {
+  if (ev.srcElement) noteManager.selectedNote.extra = Number(ev.srcElement.value);
+});
+window.addEventListener("resize", function () {
+  app.renderer.resize(window.innerWidth, window.innerHeight);
+});
+window.addEventListener("mousedown", function (ev) {
+  noteManager.mouseHandler(ev, app, noteRender, songBpm);
+});
+window.addEventListener("mousemove", function (ev) {
+  if (isDragging) {
+    var currentPos = {
+      x: ev.x,
+      y: ev.y
+    };
+    divPosition.x = divStartPosition.x + currentPos.x - dragStart.x;
+    divPosition.y = divStartPosition.y + currentPos.y - dragStart.y;
+    updateGUI();
+  }
+
+  noteManager.mouseHandler(ev, app, noteRender, songBpm);
+});
+window.addEventListener("mouseup", function (ev) {
+  divStartPosition = {
+    x: 0,
+    y: 0
+  };
+  dragStart = {
+    x: ev.x,
+    y: ev.y
+  };
+  isDragging = false;
+  noteManager.mouseHandler(ev, app, noteRender, songBpm);
+});
+window.addEventListener("dblclick", function (ev) {
+  return ev.preventDefault();
+});
+window.addEventListener("contextmenu", function (ev) {
+  return ev.preventDefault();
+});
+window.addEventListener("wheel", function (delta) {
+  return noteRender.moveView(-delta.deltaY);
+});
+window.addEventListener("keyup", function (ev) {
+  return keyPress(ev);
+});
 
 function init() {
   for (var t in _CustomTypes.noteTypes) {
@@ -53860,6 +54398,42 @@ function init() {
       inputNoteType.options.add(elm);
     }
   }
+
+  var _loop = function _loop(i) {
+    divClassSelector.children[i].addEventListener("click", function (ev) {
+      noteManager.setNoteClass(i);
+      updateGUI();
+    });
+    divClassSelector.children[i].addEventListener("dragstart", function (ev) {
+      return ev.preventDefault();
+    });
+  };
+
+  for (var i = 0; i < divClassSelector.children.length; ++i) {
+    _loop(i);
+  }
+
+  divModes.children[0].addEventListener("click", function (ev) {
+    noteManager.setMode(_NoteManager.Modes.add);
+    updateGUI();
+  });
+  divModes.children[0].addEventListener("dragstart", function (ev) {
+    return ev.preventDefault();
+  });
+  divModes.children[1].addEventListener("click", function (ev) {
+    noteManager.setMode(_NoteManager.Modes.select);
+    updateGUI();
+  });
+  divModes.children[1].addEventListener("dragstart", function (ev) {
+    return ev.preventDefault();
+  });
+  divModes.children[2].addEventListener("click", function (ev) {
+    noteManager.setMode(_NoteManager.Modes.delete);
+    updateGUI();
+  });
+  divModes.children[2].addEventListener("dragstart", function (ev) {
+    return ev.preventDefault();
+  });
 }
 
 init();
@@ -53882,31 +54456,12 @@ app.ticker.add(function (delta) {
     noteManager.needsRefreshing = false;
   }
 });
-window.addEventListener("resize", function () {
-  app.renderer.resize(window.innerWidth, window.innerHeight);
-});
-window.addEventListener("mouseup", function (ev) {
-  return noteManager.mouseHandler(ev, app, noteRender);
-});
-window.addEventListener("mousemove", function (ev) {
-  return noteManager.mouseHandler(ev, app, noteRender);
-});
-window.addEventListener("dblclick", function (ev) {
-  return ev.preventDefault();
-});
-window.addEventListener("contextmenu", function (ev) {
-  return ev.preventDefault();
-});
-window.addEventListener("wheel", function (delta) {
-  return noteRender.moveView(-delta.deltaY);
-});
-window.addEventListener("keyup", function (ev) {
-  return keyPress(ev);
-});
 
 function keyPress(ev) {
   //console.log(ev)
-  if (ev.key == " ") {
+  if (ev.key == "Home" && !sound.playing()) {
+    noteRender.setViewOffset(0);
+  } else if (ev.key == " ") {
     if (sound.playing()) {
       sound.stop();
     } else {
@@ -53951,24 +54506,48 @@ function keyPress(ev) {
   }
 }
 
-(_a = document.getElementById("inputBPM")) === null || _a === void 0 ? void 0 : _a.addEventListener("change", function (ev) {
-  if (ev.srcElement) songBpm = Number(ev.srcElement.value);
-});
-(_b = document.getElementById("inputPos")) === null || _b === void 0 ? void 0 : _b.addEventListener("change", function (ev) {
-  if (ev.srcElement) noteRender.time = Number(ev.srcElement.value);
-});
-(_c = document.getElementById("inputTimeScale")) === null || _c === void 0 ? void 0 : _c.addEventListener("change", function (ev) {
-  if (ev.srcElement) timeWarp = Number(ev.srcElement.value);
-});
-(_d = document.getElementById("inputUIScale")) === null || _d === void 0 ? void 0 : _d.addEventListener("change", function (ev) {
-  if (ev.srcElement) noteRender.setScale(Number(ev.srcElement.value));
-});
-
 function updateGUI() {
+  divMain.style.left = divPosition.x + "px";
+  divMain.style.top = divPosition.y + "px";
   inputBPM.value = songBpm.toFixed(2);
   inputPos.value = noteRender.time.toFixed(2);
   inputTimeScale.value = timeWarp.toFixed(2);
   inputUIScale.value = noteRender.uiScale.toFixed(2);
+  inputBPMRes.value = (1 / noteRender.bpmResolution).toString();
+  var cls = noteManager.noteClass;
+  var children = divClassSelector.children;
+
+  var _iterator = _createForOfIteratorHelper(children),
+      _step;
+
+  try {
+    for (_iterator.s(); !(_step = _iterator.n()).done;) {
+      var c = _step.value;
+      c.classList.remove("selected");
+    }
+  } catch (err) {
+    _iterator.e(err);
+  } finally {
+    _iterator.f();
+  }
+
+  if (cls === _NoteManager.NoteClass.TAP) children[0].classList.add("selected");else if (cls === _NoteManager.NoteClass.SCRATCH) children[1].classList.add("selected");else if (cls === _NoteManager.NoteClass.CROSS) children[2].classList.add("selected");else if (cls === _NoteManager.NoteClass.FX) children[3].classList.add("selected");else if (cls === _NoteManager.NoteClass.FS) children[4].classList.add("selected");else if (cls === _NoteManager.NoteClass.EVENTS) children[5].classList.add("selected");
+  var mode = noteManager.mode;
+
+  if (mode === _NoteManager.Modes.add) {
+    divModes.children[0].classList.add("selected");
+    divModes.children[1].classList.remove("selected");
+    divModes.children[2].classList.remove("selected");
+  } else if (mode === _NoteManager.Modes.select) {
+    divModes.children[0].classList.remove("selected");
+    divModes.children[1].classList.add("selected");
+    divModes.children[2].classList.remove("selected");
+  } else if (mode === _NoteManager.Modes.delete) {
+    divModes.children[0].classList.remove("selected");
+    divModes.children[1].classList.remove("selected");
+    divModes.children[2].classList.add("selected");
+  }
+
   var index = -1;
 
   for (var i = 0; i < inputNoteType.options.length; ++i) {
@@ -53979,6 +54558,7 @@ function updateGUI() {
   inputNoteType.selectedIndex = index;
   inputNoteTime.value = noteManager.selectedNote.time.toString();
   inputNoteLength.value = noteManager.selectedNote.length.toString();
+  inputNoteExtra.value = noteManager.selectedNote.extra.toString();
 }
 
 updateGUI();
@@ -54025,7 +54605,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "64281" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "63777" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
