@@ -54924,6 +54924,7 @@ var inputNoteTime = document.getElementById("inputNoteTime");
 var inputNoteLength = document.getElementById("inputNoteLength");
 var inputNoteExtra = document.getElementById("inputNoteExtra");
 Array.from(document.getElementsByClassName("topBar")).forEach(function (bar) {
+  ;
   bar.addEventListener("mousedown", function (ev) {
     if (bar.parentElement !== null) {
       divStartPosition.x = Number(getComputedStyle(bar.parentElement).left.slice(0, -2));
@@ -55280,7 +55281,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "54907" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "60215" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
