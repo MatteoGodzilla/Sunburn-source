@@ -49691,9 +49691,9 @@ var NoteRender = /*#__PURE__*/function () {
             var xLeft = app.renderer.width / 2 - this.uiScale * 2;
             var xRight = app.renderer.width / 2 + this.uiScale * 1;
             graphicsObject.graphic.beginFill(Colors.GREEN, 0.25);
-            graphicsObject.graphic.drawRect(xLeft, _startHeight9, this.uiScale * 1, _y - _startHeight9);
+            graphicsObject.graphic.drawRect(xLeft, _startHeight9 + this.padding, this.uiScale * 1, _y - _startHeight9 - this.padding);
             graphicsObject.graphic.beginFill(Colors.BLUE, 0.25);
-            graphicsObject.graphic.drawRect(xRight, _startHeight9, this.uiScale * 1, _y - _startHeight9);
+            graphicsObject.graphic.drawRect(xRight, _startHeight9 + this.padding, this.uiScale * 1, _y - _startHeight9 - this.padding);
           } else if (note.type === _CustomTypes.noteTypes.SCR_G_ZONE) {
             x -= (note.lane == 0 ? 2 : 1) * this.uiScale;
             var _crossfades2 = [];
@@ -49723,7 +49723,7 @@ var NoteRender = /*#__PURE__*/function () {
               //straight tail
               var _startHeight10 = this.getYfromTime(note.time + note.length, renderHeight);
 
-              graphicsObject.graphic.drawRect(x - _width3 / 2, _startHeight10, _width3, _y - _startHeight10);
+              graphicsObject.graphic.drawRect(x - _width3 / 2, _startHeight10 + this.padding, _width3, _y - _startHeight10 - this.padding);
             } else {
               var _pastLane2 = note.lane;
               var _pastTime2 = note.time;
@@ -49764,7 +49764,7 @@ var NoteRender = /*#__PURE__*/function () {
 
               var _bottomY4 = this.getYfromTime(_pastTime2, renderHeight);
 
-              graphicsObject.graphic.drawRect(x - _width3 / 2, _topY4, _width3, _bottomY4 - _topY4);
+              graphicsObject.graphic.drawRect(x - _width3 / 2, _topY4 + this.padding, _width3, _bottomY4 - _topY4 - this.padding);
             }
           } else if (note.type === _CustomTypes.noteTypes.SCR_B_ZONE) {
             x += (note.lane == 2 ? 2 : 1) * this.uiScale;
@@ -49847,7 +49847,7 @@ var NoteRender = /*#__PURE__*/function () {
 
             graphicsObject.graphic.zIndex = Layers.EUPHORIA;
             graphicsObject.graphic.beginFill(Colors.GREEN, 1.0);
-            graphicsObject.graphic.drawRect(x - this.uiScale * 2, _startHeight12 + this.padding / 2, _width5, _y - _startHeight12 - this.padding / 2);
+            graphicsObject.graphic.drawRect(x - this.uiScale * 2, _startHeight12 + this.padding, _width5, _y - _startHeight12 - this.padding);
           } else if (note.type === _CustomTypes.noteTypes.FS_CF_B_MARKER) {
             graphicsObject = this.getSprite(note.type);
 
@@ -49857,7 +49857,7 @@ var NoteRender = /*#__PURE__*/function () {
 
             graphicsObject.graphic.zIndex = Layers.EUPHORIA;
             graphicsObject.graphic.beginFill(Colors.BLUE, 1.0);
-            graphicsObject.graphic.drawRect(x + this.uiScale * 2 - _width6, _startHeight13 + this.padding / 2, _width6, _y - _startHeight13 - this.padding / 2);
+            graphicsObject.graphic.drawRect(x + this.uiScale * 2 - _width6, _startHeight13 + this.padding, _width6, _y - _startHeight13 - this.padding);
           } else if (note.type === _CustomTypes.noteTypes.CF_SPIKE_G) {
             x -= this.uiScale * 1.5;
             graphicsObject = this.getSprite(note.type);
@@ -53622,6 +53622,8 @@ exports.NoteClass = NoteClass;
   NoteClass[NoteClass["EVENTS"] = 5] = "EVENTS";
 })(NoteClass || (exports.NoteClass = NoteClass = {}));
 
+var eventTypesList = [_CustomTypes.noteTypes.REWIND, _CustomTypes.noteTypes.STRING, _CustomTypes.noteTypes.FX_FILTER, _CustomTypes.noteTypes.FX_BEATROLL, _CustomTypes.noteTypes.FX_BITREDUCTION, _CustomTypes.noteTypes.FX_WAHWAH, _CustomTypes.noteTypes.FX_RINGMOD, _CustomTypes.noteTypes.FX_STUTTER, _CustomTypes.noteTypes.FX_FLANGER, _CustomTypes.noteTypes.FX_ROBOT, _CustomTypes.noteTypes.FX_BEATROLLAUTO, _CustomTypes.noteTypes.FX_DELAY, _CustomTypes.noteTypes.BATTLE_MARKER];
+
 var NoteManager = /*#__PURE__*/function () {
   function NoteManager(app, notes) {
     _classCallCheck(this, NoteManager);
@@ -53653,178 +53655,179 @@ var NoteManager = /*#__PURE__*/function () {
       var lane = this.getLane(ev, app, noteRender.uiScale);
 
       if (ev.type === "mousedown") {
-        if (ev.which === 1) {
-          if (this.mode === Modes.add) {
-            var mouseTime = this.getTimeFromY(ev, app, noteRender);
-            var lastBPMChange = {
-              time: 0,
-              type: 0,
-              length: 0,
-              lane: 0,
-              extra: 0
-            };
+        var mouseTime = this.getTimeFromY(ev, app, noteRender);
+        var lastBPMChange = {
+          time: 0,
+          type: 0,
+          length: 0,
+          lane: 0,
+          extra: 0
+        };
 
-            var _iterator = _createForOfIteratorHelper(this.notes),
-                _step;
+        var _iterator = _createForOfIteratorHelper(this.notes),
+            _step;
 
-            try {
-              for (_iterator.s(); !(_step = _iterator.n()).done;) {
-                var _n11 = _step.value;
-                if ((_n11.type === _CustomTypes.noteTypes.BPM || _n11.type === _CustomTypes.noteTypes.BPM_FAKE) && _n11.time <= mouseTime) lastBPMChange = _n11;
+        try {
+          for (_iterator.s(); !(_step = _iterator.n()).done;) {
+            var _n36 = _step.value;
+            if ((_n36.type === _CustomTypes.noteTypes.BPM || _n36.type === _CustomTypes.noteTypes.BPM_FAKE) && _n36.time <= mouseTime) lastBPMChange = _n36;
+          }
+        } catch (err) {
+          _iterator.e(err);
+        } finally {
+          _iterator.f();
+        }
+
+        var tickDelta = noteRender.bpmResolution * baseBPM / lastBPMChange.extra;
+        var closestBeat = Math.round((mouseTime - lastBPMChange.time) / tickDelta) * tickDelta + lastBPMChange.time;
+
+        if (this.mode === Modes.add) {
+          var data = {
+            type: _CustomTypes.noteTypes.TAP_G,
+            time: closestBeat,
+            length: 0,
+            extra: 0,
+            lane: 1
+          };
+
+          if (this.noteClass === NoteClass.TAP) {
+            if ((lane === -2 || lane === -1) && ev.which === 1) {
+              //GREEN TAP
+              var present = false;
+
+              var _iterator2 = _createForOfIteratorHelper(this.notes),
+                  _step2;
+
+              try {
+                for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+                  var n = _step2.value;
+
+                  if (n.type === _CustomTypes.noteTypes.TAP_G && n.time === closestBeat) {
+                    present = true;
+                    break;
+                  }
+                }
+              } catch (err) {
+                _iterator2.e(err);
+              } finally {
+                _iterator2.f();
               }
-            } catch (err) {
-              _iterator.e(err);
-            } finally {
-              _iterator.f();
+
+              if (!present) {
+                data.type = _CustomTypes.noteTypes.TAP_G;
+                this.notes.push(data);
+              }
+            } else if (lane === 0 && ev.which === 1) {
+              //RED TAP
+              var _present = false;
+
+              var _iterator3 = _createForOfIteratorHelper(this.notes),
+                  _step3;
+
+              try {
+                for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+                  var _n = _step3.value;
+
+                  if (_n.type === _CustomTypes.noteTypes.TAP_R && _n.time === closestBeat) {
+                    _present = true;
+                    break;
+                  }
+                }
+              } catch (err) {
+                _iterator3.e(err);
+              } finally {
+                _iterator3.f();
+              }
+
+              if (!_present) {
+                data.type = _CustomTypes.noteTypes.TAP_R;
+                this.notes.push(data);
+              }
+            } else if ((lane === 1 || lane === 2) && ev.which === 1) {
+              //BLUE TAP
+              var _present2 = false;
+
+              var _iterator4 = _createForOfIteratorHelper(this.notes),
+                  _step4;
+
+              try {
+                for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+                  var _n2 = _step4.value;
+
+                  if (_n2.type === _CustomTypes.noteTypes.TAP_B && _n2.time === closestBeat) {
+                    _present2 = true;
+                    break;
+                  }
+                }
+              } catch (err) {
+                _iterator4.e(err);
+              } finally {
+                _iterator4.f();
+              }
+
+              if (!_present2) {
+                data.type = _CustomTypes.noteTypes.TAP_B;
+                this.notes.push(data);
+              }
             }
+          } else if (this.noteClass === NoteClass.SCRATCH) {
+            if (lane === -2 || lane === -1) {
+              //GREEN
+              var _present3 = false;
 
-            var tickDelta = noteRender.bpmResolution * baseBPM / lastBPMChange.extra;
-            var closestBeat = Math.round((mouseTime - lastBPMChange.time) / tickDelta) * tickDelta + lastBPMChange.time;
-            var data = {
-              type: _CustomTypes.noteTypes.TAP_G,
-              time: closestBeat,
-              length: 0,
-              extra: 0,
-              lane: 1
-            };
+              var _iterator5 = _createForOfIteratorHelper(this.notes),
+                  _step5;
 
-            if (this.noteClass === NoteClass.TAP) {
-              if (lane === -2 || lane === -1) {
-                //GREEN TAP
-                var present = false;
+              try {
+                for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
+                  var _n3 = _step5.value;
 
-                var _iterator2 = _createForOfIteratorHelper(this.notes),
-                    _step2;
-
-                try {
-                  for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-                    var n = _step2.value;
-
-                    if (n.type === _CustomTypes.noteTypes.TAP_G && n.time === closestBeat) {
-                      present = true;
-                      break;
-                    }
+                  if ((_n3.type === _CustomTypes.noteTypes.SCR_G_UP || _n3.type === _CustomTypes.noteTypes.SCR_G_DOWN || _n3.type === _CustomTypes.noteTypes.SCR_G_ANYDIR) && _n3.time === closestBeat) {
+                    _present3 = true;
+                    break;
                   }
-                } catch (err) {
-                  _iterator2.e(err);
-                } finally {
-                  _iterator2.f();
                 }
-
-                if (!present) {
-                  data.type = _CustomTypes.noteTypes.TAP_G;
-                  this.notes.push(data);
-                }
-              } else if (lane === 0) {
-                //RED TAP
-                var _present = false;
-
-                var _iterator3 = _createForOfIteratorHelper(this.notes),
-                    _step3;
-
-                try {
-                  for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-                    var _n = _step3.value;
-
-                    if (_n.type === _CustomTypes.noteTypes.TAP_R && _n.time === closestBeat) {
-                      _present = true;
-                      break;
-                    }
-                  }
-                } catch (err) {
-                  _iterator3.e(err);
-                } finally {
-                  _iterator3.f();
-                }
-
-                if (!_present) {
-                  data.type = _CustomTypes.noteTypes.TAP_R;
-                  this.notes.push(data);
-                }
-              } else if (lane === 1 || lane === 2) {
-                //BLUE TAP
-                var _present2 = false;
-
-                var _iterator4 = _createForOfIteratorHelper(this.notes),
-                    _step4;
-
-                try {
-                  for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
-                    var _n2 = _step4.value;
-
-                    if (_n2.type === _CustomTypes.noteTypes.TAP_B && _n2.time === closestBeat) {
-                      _present2 = true;
-                      break;
-                    }
-                  }
-                } catch (err) {
-                  _iterator4.e(err);
-                } finally {
-                  _iterator4.f();
-                }
-
-                if (!_present2) {
-                  data.type = _CustomTypes.noteTypes.TAP_B;
-                  this.notes.push(data);
-                }
+              } catch (err) {
+                _iterator5.e(err);
+              } finally {
+                _iterator5.f();
               }
-            } else if (this.noteClass === NoteClass.SCRATCH) {
-              if (lane === -2 || lane === -1) {
-                //GREEN
-                var _present3 = false;
 
-                var _iterator5 = _createForOfIteratorHelper(this.notes),
-                    _step5;
-
-                try {
-                  for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
-                    var _n3 = _step5.value;
-
-                    if ((_n3.type === _CustomTypes.noteTypes.SCR_G_UP || _n3.type === _CustomTypes.noteTypes.SCR_G_DOWN || _n3.type === _CustomTypes.noteTypes.SCR_G_ANYDIR) && _n3.time === closestBeat) {
-                      _present3 = true;
-                      break;
-                    }
-                  }
-                } catch (err) {
-                  _iterator5.e(err);
-                } finally {
-                  _iterator5.f();
-                }
-
-                if (!_present3) {
-                  if (this.selectedNote.type === _CustomTypes.noteTypes.SCR_G_UP) data.type = _CustomTypes.noteTypes.SCR_G_DOWN;else data.type = _CustomTypes.noteTypes.SCR_G_UP;
-                  this.notes.push(data);
-                }
-              } else if (lane === 1 || lane === 2) {
-                //BLUE
-                var _present4 = false;
-
-                var _iterator6 = _createForOfIteratorHelper(this.notes),
-                    _step6;
-
-                try {
-                  for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
-                    var _n4 = _step6.value;
-
-                    if ((_n4.type === _CustomTypes.noteTypes.SCR_B_UP || _n4.type === _CustomTypes.noteTypes.SCR_B_DOWN || _n4.type === _CustomTypes.noteTypes.SCR_B_ANYDIR) && _n4.time === closestBeat) {
-                      _present4 = true;
-                      break;
-                    }
-                  }
-                } catch (err) {
-                  _iterator6.e(err);
-                } finally {
-                  _iterator6.f();
-                }
-
-                if (!_present4) {
-                  if (this.selectedNote.type === _CustomTypes.noteTypes.SCR_B_UP) data.type = _CustomTypes.noteTypes.SCR_B_DOWN;else data.type = _CustomTypes.noteTypes.SCR_B_UP;
-                  this.notes.push(data);
-                }
+              if (!_present3) {
+                if (ev.which === 1) data.type = _CustomTypes.noteTypes.SCR_G_UP;else if (ev.which === 3) data.type = _CustomTypes.noteTypes.SCR_G_DOWN;
+                this.notes.push(data);
               }
-            } else if (this.noteClass === NoteClass.CROSS) {
-              if (lane === -2 || lane === -1) {
-                //GREEN CROSS
+            } else if (lane === 1 || lane === 2) {
+              //BLUE
+              var _present4 = false;
+
+              var _iterator6 = _createForOfIteratorHelper(this.notes),
+                  _step6;
+
+              try {
+                for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
+                  var _n4 = _step6.value;
+
+                  if ((_n4.type === _CustomTypes.noteTypes.SCR_B_UP || _n4.type === _CustomTypes.noteTypes.SCR_B_DOWN || _n4.type === _CustomTypes.noteTypes.SCR_B_ANYDIR) && _n4.time === closestBeat) {
+                    _present4 = true;
+                    break;
+                  }
+                }
+              } catch (err) {
+                _iterator6.e(err);
+              } finally {
+                _iterator6.f();
+              }
+
+              if (!_present4) {
+                if (ev.which === 1) data.type = _CustomTypes.noteTypes.SCR_B_UP;else if (ev.which === 3) data.type = _CustomTypes.noteTypes.SCR_B_DOWN;
+                this.notes.push(data);
+              }
+            }
+          } else if (this.noteClass === NoteClass.CROSS) {
+            if (lane === -2 || lane === -1) {
+              //GREEN CROSS
+              if (ev.which === 1) {
                 var _present5 = false;
                 var toEdit = this.notes[0];
 
@@ -53853,8 +53856,7 @@ var NoteManager = /*#__PURE__*/function () {
                 } else {
                   toEdit.type = _CustomTypes.noteTypes.CROSS_G;
                 }
-              } else if (lane === 0) {
-                //RED CROSS
+              } else if (ev.which === 3) {
                 var _present6 = false;
                 var _toEdit = this.notes[0];
 
@@ -53865,7 +53867,7 @@ var NoteManager = /*#__PURE__*/function () {
                   for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
                     var _n6 = _step8.value;
 
-                    if ((_n6.type === _CustomTypes.noteTypes.CROSS_G || _n6.type === _CustomTypes.noteTypes.CROSS_C || _n6.type === _CustomTypes.noteTypes.CROSS_B) && _n6.time === closestBeat) {
+                    if ((_n6.type === _CustomTypes.noteTypes.CF_SPIKE_G || _n6.type === _CustomTypes.noteTypes.CF_SPIKE_B || _n6.type === _CustomTypes.noteTypes.CF_SPIKE_C) && _n6.time === closestBeat) {
                       _present6 = true;
                       _toEdit = _n6;
                       break;
@@ -53878,13 +53880,15 @@ var NoteManager = /*#__PURE__*/function () {
                 }
 
                 if (!_present6) {
-                  data.type = _CustomTypes.noteTypes.CROSS_C;
+                  data.type = _CustomTypes.noteTypes.CF_SPIKE_G;
                   this.notes.push(data);
                 } else {
-                  _toEdit.type = _CustomTypes.noteTypes.CROSS_C;
+                  _toEdit.type = _CustomTypes.noteTypes.CF_SPIKE_G;
                 }
-              } else if (lane === 1 || lane === 2) {
-                //BLUE CROSS
+              }
+            } else if (lane === 0) {
+              //RED CROSS
+              if (ev.which === 1) {
                 var _present7 = false;
                 var _toEdit2 = this.notes[0];
 
@@ -53908,16 +53912,14 @@ var NoteManager = /*#__PURE__*/function () {
                 }
 
                 if (!_present7) {
-                  data.type = _CustomTypes.noteTypes.CROSS_B;
+                  data.type = _CustomTypes.noteTypes.CROSS_C;
                   this.notes.push(data);
                 } else {
-                  _toEdit2.type = _CustomTypes.noteTypes.CROSS_B;
+                  _toEdit2.type = _CustomTypes.noteTypes.CROSS_C;
                 }
-              }
-            } else if (this.noteClass === NoteClass.FX) {
-              if (lane === -2 || lane === -1) {
-                //GREEN FX
+              } else if (ev.which === 3) {
                 var _present8 = false;
+                var _toEdit3 = this.notes[0];
 
                 var _iterator10 = _createForOfIteratorHelper(this.notes),
                     _step10;
@@ -53926,8 +53928,9 @@ var NoteManager = /*#__PURE__*/function () {
                   for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
                     var _n8 = _step10.value;
 
-                    if (_n8.type === _CustomTypes.noteTypes.FX_G && _n8.time === closestBeat) {
+                    if ((_n8.type === _CustomTypes.noteTypes.CF_SPIKE_G || _n8.type === _CustomTypes.noteTypes.CF_SPIKE_B || _n8.type === _CustomTypes.noteTypes.CF_SPIKE_C) && _n8.time === closestBeat) {
                       _present8 = true;
+                      _toEdit3 = _n8;
                       break;
                     }
                   }
@@ -53938,20 +53941,17 @@ var NoteManager = /*#__PURE__*/function () {
                 }
 
                 if (!_present8) {
-                  var fx = {
-                    type: _CustomTypes.noteTypes.FX_FILTER,
-                    time: data.time,
-                    lane: 1,
-                    extra: 0,
-                    length: 0
-                  };
-                  data.type = _CustomTypes.noteTypes.FX_G;
+                  data.type = _CustomTypes.noteTypes.CF_SPIKE_C;
                   this.notes.push(data);
-                  this.notes.push(fx);
+                } else {
+                  _toEdit3.type = _CustomTypes.noteTypes.CF_SPIKE_C;
                 }
-              } else if (lane === 0) {
-                //ALL FX
+              }
+            } else if (lane === 1 || lane === 2) {
+              //BLUE CROSS
+              if (ev.which === 1) {
                 var _present9 = false;
+                var _toEdit4 = this.notes[0];
 
                 var _iterator11 = _createForOfIteratorHelper(this.notes),
                     _step11;
@@ -53960,8 +53960,9 @@ var NoteManager = /*#__PURE__*/function () {
                   for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
                     var _n9 = _step11.value;
 
-                    if (_n9.type === _CustomTypes.noteTypes.FX_ALL && _n9.time === closestBeat) {
+                    if ((_n9.type === _CustomTypes.noteTypes.CROSS_G || _n9.type === _CustomTypes.noteTypes.CROSS_C || _n9.type === _CustomTypes.noteTypes.CROSS_B) && _n9.time === closestBeat) {
                       _present9 = true;
+                      _toEdit4 = _n9;
                       break;
                     }
                   }
@@ -53972,20 +53973,14 @@ var NoteManager = /*#__PURE__*/function () {
                 }
 
                 if (!_present9) {
-                  var _fx = {
-                    type: _CustomTypes.noteTypes.FX_FILTER,
-                    time: data.time,
-                    lane: 1,
-                    extra: 0,
-                    length: 0
-                  };
-                  data.type = _CustomTypes.noteTypes.FX_ALL;
+                  data.type = _CustomTypes.noteTypes.CROSS_B;
                   this.notes.push(data);
-                  this.notes.push(_fx);
+                } else {
+                  _toEdit4.type = _CustomTypes.noteTypes.CROSS_B;
                 }
-              } else if (lane === 1 || lane === 2) {
-                //BLUE FX
+              } else if (ev.which === 3) {
                 var _present10 = false;
+                var _toEdit5 = this.notes[0];
 
                 var _iterator12 = _createForOfIteratorHelper(this.notes),
                     _step12;
@@ -53994,8 +53989,9 @@ var NoteManager = /*#__PURE__*/function () {
                   for (_iterator12.s(); !(_step12 = _iterator12.n()).done;) {
                     var _n10 = _step12.value;
 
-                    if (_n10.type === _CustomTypes.noteTypes.FX_B && _n10.time === closestBeat) {
+                    if ((_n10.type === _CustomTypes.noteTypes.CF_SPIKE_G || _n10.type === _CustomTypes.noteTypes.CF_SPIKE_B || _n10.type === _CustomTypes.noteTypes.CF_SPIKE_C) && _n10.time === closestBeat) {
                       _present10 = true;
+                      _toEdit5 = _n10;
                       break;
                     }
                   }
@@ -54006,31 +54002,614 @@ var NoteManager = /*#__PURE__*/function () {
                 }
 
                 if (!_present10) {
-                  var _fx2 = {
-                    type: _CustomTypes.noteTypes.FX_FILTER,
-                    time: data.time,
-                    lane: 1,
-                    extra: 0,
-                    length: 0
-                  };
-                  data.type = _CustomTypes.noteTypes.FX_B;
+                  data.type = _CustomTypes.noteTypes.CF_SPIKE_B;
                   this.notes.push(data);
-                  this.notes.push(_fx2);
+                } else {
+                  _toEdit5.type = _CustomTypes.noteTypes.CF_SPIKE_B;
                 }
               }
             }
+          } else if (this.noteClass === NoteClass.FX) {
+            if ((lane === -2 || lane === -1) && ev.which === 1) {
+              //GREEN FX
+              var _present11 = false;
 
-            this.notes.sort(function (a, b) {
-              return a.time - b.time;
-            });
-            this.notes.forEach(function (n) {
-              n.lane = _NoteLoader.NoteLoader.getCrossAtTime(n.time, _this.notes);
-              n.selected = false;
-            });
-            this.selectedNote = data;
-            this.selectedNote.selected = true;
-            this.needsRefreshing = true; //console.log(this.notes.length)
+              var _iterator13 = _createForOfIteratorHelper(this.notes),
+                  _step13;
+
+              try {
+                for (_iterator13.s(); !(_step13 = _iterator13.n()).done;) {
+                  var _n11 = _step13.value;
+
+                  if (_n11.type === _CustomTypes.noteTypes.FX_G && _n11.time === closestBeat) {
+                    _present11 = true;
+                    break;
+                  }
+                }
+              } catch (err) {
+                _iterator13.e(err);
+              } finally {
+                _iterator13.f();
+              }
+
+              if (!_present11) {
+                var fx = {
+                  type: _CustomTypes.noteTypes.FX_FILTER,
+                  time: data.time,
+                  lane: 1,
+                  extra: 0,
+                  length: 0
+                };
+                data.type = _CustomTypes.noteTypes.FX_G;
+                this.notes.push(data);
+                this.notes.push(fx);
+              }
+            } else if (lane === 0 && ev.which === 1) {
+              //ALL FX
+              var _present12 = false;
+
+              var _iterator14 = _createForOfIteratorHelper(this.notes),
+                  _step14;
+
+              try {
+                for (_iterator14.s(); !(_step14 = _iterator14.n()).done;) {
+                  var _n12 = _step14.value;
+
+                  if (_n12.type === _CustomTypes.noteTypes.FX_ALL && _n12.time === closestBeat) {
+                    _present12 = true;
+                    break;
+                  }
+                }
+              } catch (err) {
+                _iterator14.e(err);
+              } finally {
+                _iterator14.f();
+              }
+
+              if (!_present12) {
+                var _fx = {
+                  type: _CustomTypes.noteTypes.FX_FILTER,
+                  time: data.time,
+                  lane: 1,
+                  extra: 0,
+                  length: 0
+                };
+                data.type = _CustomTypes.noteTypes.FX_ALL;
+                this.notes.push(data);
+                this.notes.push(_fx);
+              }
+            } else if ((lane === 1 || lane === 2) && ev.which === 1) {
+              //BLUE FX
+              var _present13 = false;
+
+              var _iterator15 = _createForOfIteratorHelper(this.notes),
+                  _step15;
+
+              try {
+                for (_iterator15.s(); !(_step15 = _iterator15.n()).done;) {
+                  var _n13 = _step15.value;
+
+                  if (_n13.type === _CustomTypes.noteTypes.FX_B && _n13.time === closestBeat) {
+                    _present13 = true;
+                    break;
+                  }
+                }
+              } catch (err) {
+                _iterator15.e(err);
+              } finally {
+                _iterator15.f();
+              }
+
+              if (!_present13) {
+                var _fx2 = {
+                  type: _CustomTypes.noteTypes.FX_FILTER,
+                  time: data.time,
+                  lane: 1,
+                  extra: 0,
+                  length: 0
+                };
+                data.type = _CustomTypes.noteTypes.FX_B;
+                this.notes.push(data);
+                this.notes.push(_fx2);
+              }
+            }
+          } else if (this.noteClass === NoteClass.FS) {
+            if (lane === -2 || lane === -1) {
+              //green lane
+              if (ev.which === 1) {
+                //FREESTYLE CROSSFADE
+                var _present14 = false;
+
+                var _iterator16 = _createForOfIteratorHelper(this.notes),
+                    _step16;
+
+                try {
+                  for (_iterator16.s(); !(_step16 = _iterator16.n()).done;) {
+                    var _n14 = _step16.value;
+
+                    if (_n14.type === _CustomTypes.noteTypes.FS_CROSS && _n14.time === closestBeat) {
+                      _present14 = true;
+                      break;
+                    }
+                  }
+                } catch (err) {
+                  _iterator16.e(err);
+                } finally {
+                  _iterator16.f();
+                }
+
+                if (!_present14) {
+                  data.type = _CustomTypes.noteTypes.FS_CROSS;
+                  this.notes.push(data);
+                }
+              } else if (ev.which === 3) {
+                //GREEN MARKER
+                var _present15 = false;
+
+                var _iterator17 = _createForOfIteratorHelper(this.notes),
+                    _step17;
+
+                try {
+                  for (_iterator17.s(); !(_step17 = _iterator17.n()).done;) {
+                    var _n15 = _step17.value;
+
+                    if (_n15.type === _CustomTypes.noteTypes.FS_CF_G_MARKER && _n15.time === closestBeat) {
+                      _present15 = true;
+                      break;
+                    }
+                  }
+                } catch (err) {
+                  _iterator17.e(err);
+                } finally {
+                  _iterator17.f();
+                }
+
+                if (!_present15) {
+                  data.type = _CustomTypes.noteTypes.FS_CF_G_MARKER;
+                  this.notes.push(data);
+                }
+              }
+            } else if (lane === 0) {
+              //red lane
+              if (ev.which === 1) {
+                //FREESTYLE SAMPLES
+                var _present16 = false;
+
+                var _iterator18 = _createForOfIteratorHelper(this.notes),
+                    _step18;
+
+                try {
+                  for (_iterator18.s(); !(_step18 = _iterator18.n()).done;) {
+                    var _n16 = _step18.value;
+
+                    if (_n16.type === _CustomTypes.noteTypes.FS_SAMPLES && _n16.time === closestBeat) {
+                      _present16 = true;
+                      break;
+                    }
+                  }
+                } catch (err) {
+                  _iterator18.e(err);
+                } finally {
+                  _iterator18.f();
+                }
+
+                if (!_present16) {
+                  data.type = _CustomTypes.noteTypes.FS_SAMPLES;
+                  this.notes.push(data);
+                }
+              }
+            } else if (lane === 1 || lane === 2) {
+              //blue lane
+              if (ev.which === 1) {
+                //FREESTYLE CROSSFADE
+                var _present17 = false;
+
+                var _iterator19 = _createForOfIteratorHelper(this.notes),
+                    _step19;
+
+                try {
+                  for (_iterator19.s(); !(_step19 = _iterator19.n()).done;) {
+                    var _n17 = _step19.value;
+
+                    if (_n17.type === _CustomTypes.noteTypes.FS_CROSS && _n17.time === closestBeat) {
+                      _present17 = true;
+                      break;
+                    }
+                  }
+                } catch (err) {
+                  _iterator19.e(err);
+                } finally {
+                  _iterator19.f();
+                }
+
+                if (!_present17) {
+                  data.type = _CustomTypes.noteTypes.FS_CROSS;
+                  this.notes.push(data);
+                }
+              } else if (ev.which === 3) {
+                //BLUE MARKER
+                var _present18 = false;
+
+                var _iterator20 = _createForOfIteratorHelper(this.notes),
+                    _step20;
+
+                try {
+                  for (_iterator20.s(); !(_step20 = _iterator20.n()).done;) {
+                    var _n18 = _step20.value;
+
+                    if (_n18.type === _CustomTypes.noteTypes.FS_CF_B_MARKER && _n18.time === closestBeat) {
+                      _present18 = true;
+                      break;
+                    }
+                  }
+                } catch (err) {
+                  _iterator20.e(err);
+                } finally {
+                  _iterator20.f();
+                }
+
+                if (!_present18) {
+                  data.type = _CustomTypes.noteTypes.FS_CF_B_MARKER;
+                  this.notes.push(data);
+                }
+              }
+            }
+          } else if (this.noteClass === NoteClass.EVENTS) {
+            if (ev.which === 1) {
+              data.type = _CustomTypes.noteTypes.REWIND;
+              this.notes.push(data);
+            }
           }
+
+          this.notes.sort(function (a, b) {
+            return a.time - b.time;
+          });
+          this.notes.forEach(function (n) {
+            n.lane = _NoteLoader.NoteLoader.getCrossAtTime(n.time, _this.notes);
+            n.selected = false;
+          });
+          this.selectedNote = data;
+          this.selectedNote.selected = true;
+          this.needsRefreshing = true; //console.log(this.notes.length)
+        } else if (this.mode === Modes.delete) {
+          if (this.noteClass === NoteClass.TAP) {
+            if ((lane === -2 || lane === -1) && ev.which === 1) {
+              //GREEN TAP
+              var _iterator21 = _createForOfIteratorHelper(this.notes),
+                  _step21;
+
+              try {
+                for (_iterator21.s(); !(_step21 = _iterator21.n()).done;) {
+                  var _n19 = _step21.value;
+
+                  if (_n19.type === _CustomTypes.noteTypes.TAP_G && _n19.time <= closestBeat && closestBeat <= _n19.time + _n19.length) {
+                    this.notes.splice(this.notes.indexOf(_n19), 1);
+                    break;
+                  }
+                }
+              } catch (err) {
+                _iterator21.e(err);
+              } finally {
+                _iterator21.f();
+              }
+            } else if (lane === 0 && ev.which === 1) {
+              //RED TAP
+              var _iterator22 = _createForOfIteratorHelper(this.notes),
+                  _step22;
+
+              try {
+                for (_iterator22.s(); !(_step22 = _iterator22.n()).done;) {
+                  var _n20 = _step22.value;
+
+                  if (_n20.type === _CustomTypes.noteTypes.TAP_R && _n20.time <= closestBeat && closestBeat <= _n20.time + _n20.length) {
+                    this.notes.splice(this.notes.indexOf(_n20), 1);
+                    break;
+                  }
+                }
+              } catch (err) {
+                _iterator22.e(err);
+              } finally {
+                _iterator22.f();
+              }
+            } else if ((lane === 1 || lane === 2) && ev.which === 1) {
+              //BLUE TAP
+              var _iterator23 = _createForOfIteratorHelper(this.notes),
+                  _step23;
+
+              try {
+                for (_iterator23.s(); !(_step23 = _iterator23.n()).done;) {
+                  var _n21 = _step23.value;
+
+                  if (_n21.type === _CustomTypes.noteTypes.TAP_B && _n21.time <= closestBeat && closestBeat <= _n21.time + _n21.length) {
+                    this.notes.splice(this.notes.indexOf(_n21), 1);
+                    break;
+                  }
+                }
+              } catch (err) {
+                _iterator23.e(err);
+              } finally {
+                _iterator23.f();
+              }
+            }
+          } else if (this.noteClass === NoteClass.SCRATCH) {
+            if (lane === -2 || lane === -1) {
+              //GREEN
+              var _iterator24 = _createForOfIteratorHelper(this.notes),
+                  _step24;
+
+              try {
+                for (_iterator24.s(); !(_step24 = _iterator24.n()).done;) {
+                  var _n22 = _step24.value;
+
+                  if ((_n22.type === _CustomTypes.noteTypes.SCR_G_UP || _n22.type === _CustomTypes.noteTypes.SCR_G_DOWN || _n22.type === _CustomTypes.noteTypes.SCR_G_ANYDIR) && _n22.time === closestBeat) {
+                    this.notes.splice(this.notes.indexOf(_n22), 1);
+                    break;
+                  }
+                }
+              } catch (err) {
+                _iterator24.e(err);
+              } finally {
+                _iterator24.f();
+              }
+            } else if (lane === 1 || lane === 2) {
+              //BLUE
+              var _iterator25 = _createForOfIteratorHelper(this.notes),
+                  _step25;
+
+              try {
+                for (_iterator25.s(); !(_step25 = _iterator25.n()).done;) {
+                  var _n23 = _step25.value;
+
+                  if ((_n23.type === _CustomTypes.noteTypes.SCR_B_UP || _n23.type === _CustomTypes.noteTypes.SCR_B_DOWN || _n23.type === _CustomTypes.noteTypes.SCR_B_ANYDIR) && _n23.time === closestBeat) {
+                    this.notes.splice(this.notes.indexOf(_n23), 1);
+                    break;
+                  }
+                }
+              } catch (err) {
+                _iterator25.e(err);
+              } finally {
+                _iterator25.f();
+              }
+            }
+          } else if (this.noteClass === NoteClass.CROSS) {
+            if ((lane === -2 || lane === -1) && ev.which === 1) {
+              //GREEN CROSS
+              var _iterator26 = _createForOfIteratorHelper(this.notes),
+                  _step26;
+
+              try {
+                for (_iterator26.s(); !(_step26 = _iterator26.n()).done;) {
+                  var _n24 = _step26.value;
+
+                  if (_n24.type === _CustomTypes.noteTypes.CROSS_G && _n24.time <= closestBeat && closestBeat <= _n24.time + _n24.length) {
+                    this.notes.splice(this.notes.indexOf(_n24), 1);
+                    break;
+                  }
+                }
+              } catch (err) {
+                _iterator26.e(err);
+              } finally {
+                _iterator26.f();
+              }
+            } else if (lane === 0 && ev.which === 1) {
+              //RED CROSS
+              var _iterator27 = _createForOfIteratorHelper(this.notes),
+                  _step27;
+
+              try {
+                for (_iterator27.s(); !(_step27 = _iterator27.n()).done;) {
+                  var _n25 = _step27.value;
+
+                  if (_n25.type === _CustomTypes.noteTypes.CROSS_C && _n25.time <= closestBeat && closestBeat <= _n25.time + _n25.length) {
+                    this.notes.splice(this.notes.indexOf(_n25), 1);
+                    break;
+                  }
+                }
+              } catch (err) {
+                _iterator27.e(err);
+              } finally {
+                _iterator27.f();
+              }
+            } else if ((lane === 1 || lane === 2) && ev.which === 1) {
+              //BLUE CROSS
+              var _iterator28 = _createForOfIteratorHelper(this.notes),
+                  _step28;
+
+              try {
+                for (_iterator28.s(); !(_step28 = _iterator28.n()).done;) {
+                  var _n26 = _step28.value;
+
+                  if (_n26.type === _CustomTypes.noteTypes.CROSS_B && _n26.time <= closestBeat && closestBeat <= _n26.time + _n26.length) {
+                    this.notes.splice(this.notes.indexOf(_n26), 1);
+                    break;
+                  }
+                }
+              } catch (err) {
+                _iterator28.e(err);
+              } finally {
+                _iterator28.f();
+              }
+            }
+          } else if (this.noteClass === NoteClass.FX) {
+            if ((lane === -2 || lane === -1) && ev.which === 1) {
+              //GREEN FX
+              var _iterator29 = _createForOfIteratorHelper(this.notes),
+                  _step29;
+
+              try {
+                for (_iterator29.s(); !(_step29 = _iterator29.n()).done;) {
+                  var _n27 = _step29.value;
+
+                  if (_n27.type === _CustomTypes.noteTypes.FX_G && _n27.time <= closestBeat && closestBeat <= _n27.time + _n27.length) {
+                    this.notes.splice(this.notes.indexOf(_n27), 1);
+                    break;
+                  }
+                }
+              } catch (err) {
+                _iterator29.e(err);
+              } finally {
+                _iterator29.f();
+              }
+            } else if (lane === 0 && ev.which === 1) {
+              //ALL FX
+              var _iterator30 = _createForOfIteratorHelper(this.notes),
+                  _step30;
+
+              try {
+                for (_iterator30.s(); !(_step30 = _iterator30.n()).done;) {
+                  var _n28 = _step30.value;
+
+                  if (_n28.type === _CustomTypes.noteTypes.FX_ALL && _n28.time <= closestBeat && closestBeat <= _n28.time + _n28.length) {
+                    this.notes.splice(this.notes.indexOf(_n28), 1);
+                    break;
+                  }
+                }
+              } catch (err) {
+                _iterator30.e(err);
+              } finally {
+                _iterator30.f();
+              }
+            } else if ((lane === 1 || lane === 2) && ev.which === 1) {
+              //BLUE FX
+              var _iterator31 = _createForOfIteratorHelper(this.notes),
+                  _step31;
+
+              try {
+                for (_iterator31.s(); !(_step31 = _iterator31.n()).done;) {
+                  var _n29 = _step31.value;
+
+                  if (_n29.type === _CustomTypes.noteTypes.FX_B && _n29.time <= closestBeat && closestBeat <= _n29.time + _n29.length) {
+                    this.notes.splice(this.notes.indexOf(_n29), 1);
+                    break;
+                  }
+                }
+              } catch (err) {
+                _iterator31.e(err);
+              } finally {
+                _iterator31.f();
+              }
+            }
+          } else if (this.noteClass === NoteClass.FS) {
+            if (lane === -2 && ev.which === 1) {
+              var _iterator32 = _createForOfIteratorHelper(this.notes),
+                  _step32;
+
+              try {
+                for (_iterator32.s(); !(_step32 = _iterator32.n()).done;) {
+                  var _n30 = _step32.value;
+
+                  if (_n30.type === _CustomTypes.noteTypes.FS_CF_G_MARKER && _n30.time <= closestBeat && closestBeat <= _n30.time + _n30.length) {
+                    this.notes.splice(this.notes.indexOf(_n30), 1);
+                    break;
+                  }
+                }
+              } catch (err) {
+                _iterator32.e(err);
+              } finally {
+                _iterator32.f();
+              }
+            } else if ((lane === -1 || lane === 1) && ev.which === 1) {
+              var _iterator33 = _createForOfIteratorHelper(this.notes),
+                  _step33;
+
+              try {
+                for (_iterator33.s(); !(_step33 = _iterator33.n()).done;) {
+                  var _n31 = _step33.value;
+
+                  if (_n31.type === _CustomTypes.noteTypes.FS_CROSS && _n31.time <= closestBeat && closestBeat <= _n31.time + _n31.length) {
+                    this.notes.splice(this.notes.indexOf(_n31), 1);
+                    break;
+                  }
+                }
+              } catch (err) {
+                _iterator33.e(err);
+              } finally {
+                _iterator33.f();
+              }
+            } else if (lane === 0 && ev.which === 1) {
+              var _iterator34 = _createForOfIteratorHelper(this.notes),
+                  _step34;
+
+              try {
+                for (_iterator34.s(); !(_step34 = _iterator34.n()).done;) {
+                  var _n32 = _step34.value;
+
+                  if (_n32.type === _CustomTypes.noteTypes.FS_SAMPLES && _n32.time <= closestBeat && closestBeat <= _n32.time + _n32.length) {
+                    break;
+                  }
+                }
+              } catch (err) {
+                _iterator34.e(err);
+              } finally {
+                _iterator34.f();
+              }
+            } else if (lane === 2 && ev.which === 1) {
+              var _iterator35 = _createForOfIteratorHelper(this.notes),
+                  _step35;
+
+              try {
+                for (_iterator35.s(); !(_step35 = _iterator35.n()).done;) {
+                  var _n33 = _step35.value;
+
+                  if (_n33.type === _CustomTypes.noteTypes.FS_CF_B_MARKER && _n33.time <= closestBeat && closestBeat <= _n33.time + _n33.length) {
+                    this.notes.splice(this.notes.indexOf(_n33), 1);
+                    break;
+                  }
+                }
+              } catch (err) {
+                _iterator35.e(err);
+              } finally {
+                _iterator35.f();
+              }
+            }
+          } else if (this.noteClass === NoteClass.EVENTS) {
+            if (lane === -3) {
+              var _iterator36 = _createForOfIteratorHelper(this.notes),
+                  _step36;
+
+              try {
+                for (_iterator36.s(); !(_step36 = _iterator36.n()).done;) {
+                  var _n34 = _step36.value;
+
+                  if ((_n34.type === _CustomTypes.noteTypes.BPM || _n34.type === _CustomTypes.noteTypes.BPM_FAKE) && _n34.time <= closestBeat && closestBeat <= _n34.time + _n34.length) {
+                    this.notes.splice(this.notes.indexOf(_n34), 1);
+                    break;
+                  }
+                }
+              } catch (err) {
+                _iterator36.e(err);
+              } finally {
+                _iterator36.f();
+              }
+            } else if (lane === 3) {
+              var _iterator37 = _createForOfIteratorHelper(this.notes),
+                  _step37;
+
+              try {
+                for (_iterator37.s(); !(_step37 = _iterator37.n()).done;) {
+                  var _n35 = _step37.value;
+
+                  if (eventTypesList.includes(_n35.type) && _n35.time <= closestBeat && closestBeat <= _n35.time + _n35.length) {
+                    this.notes.splice(this.notes.indexOf(_n35), 1);
+                    break;
+                  }
+                }
+              } catch (err) {
+                _iterator37.e(err);
+              } finally {
+                _iterator37.f();
+              }
+            }
+          }
+
+          this.notes.sort(function (a, b) {
+            return a.time - b.time;
+          });
+          this.notes.forEach(function (n) {
+            n.lane = _NoteLoader.NoteLoader.getCrossAtTime(n.time, _this.notes);
+            n.selected = false;
+          });
+          this.needsRefreshing = true; //console.log(this.notes.length)
         }
       } else if (ev.type === "mousemove") {
         if (ev.which === 3) {
@@ -54045,18 +54624,18 @@ var NoteManager = /*#__PURE__*/function () {
             extra: 0
           };
 
-          var _iterator13 = _createForOfIteratorHelper(this.notes),
-              _step13;
+          var _iterator38 = _createForOfIteratorHelper(this.notes),
+              _step38;
 
           try {
-            for (_iterator13.s(); !(_step13 = _iterator13.n()).done;) {
-              var _n13 = _step13.value;
-              if ((_n13.type === _CustomTypes.noteTypes.BPM || _n13.type === _CustomTypes.noteTypes.BPM_FAKE) && _n13.time <= _mouseTime) _lastBPMChange = _n13;
+            for (_iterator38.s(); !(_step38 = _iterator38.n()).done;) {
+              var _n38 = _step38.value;
+              if ((_n38.type === _CustomTypes.noteTypes.BPM || _n38.type === _CustomTypes.noteTypes.BPM_FAKE) && _n38.time <= _mouseTime) _lastBPMChange = _n38;
             }
           } catch (err) {
-            _iterator13.e(err);
+            _iterator38.e(err);
           } finally {
-            _iterator13.f();
+            _iterator38.f();
           }
 
           var _tickDelta = noteRender.bpmResolution * baseBPM / _lastBPMChange.extra;
@@ -54069,18 +54648,18 @@ var NoteManager = /*#__PURE__*/function () {
             if (this.selectedNote.type === _CustomTypes.noteTypes.FX_G || this.selectedNote.type === _CustomTypes.noteTypes.FX_ALL || this.selectedNote.type === _CustomTypes.noteTypes.FX_B) {
               var possible = [_CustomTypes.noteTypes.REWIND, _CustomTypes.noteTypes.STRING, _CustomTypes.noteTypes.FX_FILTER, _CustomTypes.noteTypes.FX_BEATROLL, _CustomTypes.noteTypes.FX_BITREDUCTION, _CustomTypes.noteTypes.FX_WAHWAH, _CustomTypes.noteTypes.FX_RINGMOD, _CustomTypes.noteTypes.FX_STUTTER, _CustomTypes.noteTypes.FX_FLANGER, _CustomTypes.noteTypes.FX_ROBOT, _CustomTypes.noteTypes.FX_BEATROLLAUTO, _CustomTypes.noteTypes.FX_DELAY, _CustomTypes.noteTypes.BATTLE_MARKER];
 
-              var _iterator14 = _createForOfIteratorHelper(this.notes),
-                  _step14;
+              var _iterator39 = _createForOfIteratorHelper(this.notes),
+                  _step39;
 
               try {
-                for (_iterator14.s(); !(_step14 = _iterator14.n()).done;) {
-                  var _n12 = _step14.value;
-                  if (possible.includes(_n12.type) && _n12.time === this.selectedNote.time) _n12.length = _closestBeat - this.selectedNote.time;
+                for (_iterator39.s(); !(_step39 = _iterator39.n()).done;) {
+                  var _n37 = _step39.value;
+                  if (possible.includes(_n37.type) && _n37.time === this.selectedNote.time) _n37.length = _closestBeat - this.selectedNote.time;
                 }
               } catch (err) {
-                _iterator14.e(err);
+                _iterator39.e(err);
               } finally {
-                _iterator14.f();
+                _iterator39.f();
               }
             }
           }
@@ -54146,29 +54725,29 @@ var NoteManager = /*#__PURE__*/function () {
           } else if (lane === 3) {
             //events
             if (this.noteClass === NoteClass.EVENTS) {
-              selectables = [_CustomTypes.noteTypes.REWIND, _CustomTypes.noteTypes.STRING, _CustomTypes.noteTypes.FX_FILTER, _CustomTypes.noteTypes.FX_BEATROLL, _CustomTypes.noteTypes.FX_BITREDUCTION, _CustomTypes.noteTypes.FX_WAHWAH, _CustomTypes.noteTypes.FX_RINGMOD, _CustomTypes.noteTypes.FX_STUTTER, _CustomTypes.noteTypes.FX_FLANGER, _CustomTypes.noteTypes.FX_ROBOT, _CustomTypes.noteTypes.FX_BEATROLLAUTO, _CustomTypes.noteTypes.FX_DELAY, _CustomTypes.noteTypes.BATTLE_MARKER];
+              selectables = eventTypesList;
             }
           }
 
           var candidates = [];
 
-          var _iterator15 = _createForOfIteratorHelper(this.notes),
-              _step15;
+          var _iterator40 = _createForOfIteratorHelper(this.notes),
+              _step40;
 
           try {
-            for (_iterator15.s(); !(_step15 = _iterator15.n()).done;) {
-              var _n14 = _step15.value;
+            for (_iterator40.s(); !(_step40 = _iterator40.n()).done;) {
+              var _n39 = _step40.value;
 
-              if (selectables.includes(_n14.type) && _mouseTime2 > _n14.time - 0.0625 && _mouseTime2 < _n14.time + _n14.length + 0.0625) {
-                candidates.push(_n14);
+              if (selectables.includes(_n39.type) && _mouseTime2 > _n39.time - 0.0625 && _mouseTime2 < _n39.time + _n39.length + 0.0625) {
+                candidates.push(_n39);
               }
 
-              _n14.selected = false;
+              _n39.selected = false;
             }
           } catch (err) {
-            _iterator15.e(err);
+            _iterator40.e(err);
           } finally {
-            _iterator15.f();
+            _iterator40.f();
           }
 
           if (candidates.length > 0) {
@@ -54196,6 +54775,38 @@ var NoteManager = /*#__PURE__*/function () {
           this.needsRefreshing = true;
           this.lastCandidates = candidates;
         }
+      }
+    }
+  }, {
+    key: "keyHandler",
+    value: function keyHandler(ev, app, noteRender, baseBPM) {
+      if (ev.key === "a") {
+        this.mode = Modes.add;
+        this.needsRefreshing = true;
+      } else if (ev.key === "s") {
+        this.mode = Modes.select;
+        this.needsRefreshing = true;
+      } else if (ev.key === "d") {
+        this.mode = Modes.delete;
+        this.needsRefreshing = true;
+      } else if (ev.key === "1") {
+        this.noteClass = NoteClass.TAP;
+        this.needsRefreshing = true;
+      } else if (ev.key === "2") {
+        this.noteClass = NoteClass.SCRATCH;
+        this.needsRefreshing = true;
+      } else if (ev.key === "3") {
+        this.noteClass = NoteClass.CROSS;
+        this.needsRefreshing = true;
+      } else if (ev.key === "q") {
+        this.noteClass = NoteClass.FX;
+        this.needsRefreshing = true;
+      } else if (ev.key === "w") {
+        this.noteClass = NoteClass.FS;
+        this.needsRefreshing = true;
+      } else if (ev.key === "e") {
+        this.noteClass = NoteClass.EVENTS;
+        this.needsRefreshing = true;
       }
     }
   }, {
@@ -54258,7 +54869,7 @@ function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o =
 
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 
-var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j;
 
 var app = new PIXI.Application({
   width: window.innerWidth,
@@ -54285,7 +54896,11 @@ var divStartPosition = {
   x: 0,
   y: 0
 };
-var divPosition = {
+var divMainPosition = {
+  x: 10,
+  y: 10
+};
+var divTooltipPosition = {
   x: 10,
   y: 10
 };
@@ -54293,8 +54908,10 @@ var dragStart = {
   x: -1,
   y: -1
 };
-var isDragging = false;
+var isDragging = null;
 var divMain = document.getElementById("divMain");
+var divTooltip = document.getElementById("divTooltip");
+var divTooltipTable = document.getElementById("tableTooltip");
 var inputBPM = document.getElementById("inputBPM");
 var inputPos = document.getElementById("inputPos");
 var inputTimeScale = document.getElementById("inputTimeScale");
@@ -54306,63 +54923,75 @@ var inputNoteType = document.getElementById("inputNoteType");
 var inputNoteTime = document.getElementById("inputNoteTime");
 var inputNoteLength = document.getElementById("inputNoteLength");
 var inputNoteExtra = document.getElementById("inputNoteExtra");
-(_a = document.getElementById("divTopBar")) === null || _a === void 0 ? void 0 : _a.addEventListener("mousedown", function (ev) {
-  divStartPosition.x = Number(getComputedStyle(divMain).left.slice(0, -2));
-  divStartPosition.y = Number(getComputedStyle(divMain).top.slice(0, -2));
-  dragStart = {
-    x: ev.x,
-    y: ev.y
-  };
-  isDragging = true;
+Array.from(document.getElementsByClassName("topBar")).forEach(function (bar) {
+  bar.addEventListener("mousedown", function (ev) {
+    if (bar.parentElement !== null) {
+      divStartPosition.x = Number(getComputedStyle(bar.parentElement).left.slice(0, -2));
+      divStartPosition.y = Number(getComputedStyle(bar.parentElement).top.slice(0, -2));
+      dragStart = {
+        x: ev.x,
+        y: ev.y
+      };
+      isDragging = bar.parentElement;
+    }
+  });
 });
-(_b = document.getElementById("inputBPM")) === null || _b === void 0 ? void 0 : _b.addEventListener("change", function (ev) {
+(_a = document.getElementById("inputBPM")) === null || _a === void 0 ? void 0 : _a.addEventListener("change", function (ev) {
   if (ev.srcElement) songBpm = Number(ev.srcElement.value);
 });
-(_c = document.getElementById("inputPos")) === null || _c === void 0 ? void 0 : _c.addEventListener("change", function (ev) {
+(_b = document.getElementById("inputPos")) === null || _b === void 0 ? void 0 : _b.addEventListener("change", function (ev) {
   if (ev.srcElement) noteRender.time = Number(ev.srcElement.value);
 });
-(_d = document.getElementById("inputTimeScale")) === null || _d === void 0 ? void 0 : _d.addEventListener("change", function (ev) {
+(_c = document.getElementById("inputTimeScale")) === null || _c === void 0 ? void 0 : _c.addEventListener("change", function (ev) {
   if (ev.srcElement) timeWarp = Number(ev.srcElement.value);
 });
-(_e = document.getElementById("inputUIScale")) === null || _e === void 0 ? void 0 : _e.addEventListener("change", function (ev) {
+(_d = document.getElementById("inputUIScale")) === null || _d === void 0 ? void 0 : _d.addEventListener("change", function (ev) {
   if (ev.srcElement) noteRender.setScale(Number(ev.srcElement.value));
 });
-(_f = document.getElementById("inputBPMRes")) === null || _f === void 0 ? void 0 : _f.addEventListener("change", function (ev) {
+(_e = document.getElementById("inputBPMRes")) === null || _e === void 0 ? void 0 : _e.addEventListener("change", function (ev) {
   if (ev.srcElement) {
     var v = Number(ev.srcElement.value);
     noteRender.bpmResolution = v !== 0 ? 1 / v : 0.25;
   }
 });
-(_g = document.getElementById("inputNoteType")) === null || _g === void 0 ? void 0 : _g.addEventListener("change", function (ev) {
+(_f = document.getElementById("inputNoteType")) === null || _f === void 0 ? void 0 : _f.addEventListener("change", function (ev) {
   if (ev.srcElement) noteManager.selectedNote.type = Number(ev.srcElement.value);
 });
-(_h = document.getElementById("inputNoteTime")) === null || _h === void 0 ? void 0 : _h.addEventListener("change", function (ev) {
+(_g = document.getElementById("inputNoteTime")) === null || _g === void 0 ? void 0 : _g.addEventListener("change", function (ev) {
   if (ev.srcElement) noteManager.selectedNote.time = Number(ev.srcElement.value);
 });
-(_j = document.getElementById("inputNoteLength")) === null || _j === void 0 ? void 0 : _j.addEventListener("change", function (ev) {
+(_h = document.getElementById("inputNoteLength")) === null || _h === void 0 ? void 0 : _h.addEventListener("change", function (ev) {
   if (ev.srcElement) noteManager.selectedNote.length = Number(ev.srcElement.value);
 });
-(_k = document.getElementById("inputNoteExtra")) === null || _k === void 0 ? void 0 : _k.addEventListener("change", function (ev) {
+(_j = document.getElementById("inputNoteExtra")) === null || _j === void 0 ? void 0 : _j.addEventListener("change", function (ev) {
   if (ev.srcElement) noteManager.selectedNote.extra = Number(ev.srcElement.value);
 });
 window.addEventListener("resize", function () {
   app.renderer.resize(window.innerWidth, window.innerHeight);
 });
 window.addEventListener("mousedown", function (ev) {
-  noteManager.mouseHandler(ev, app, noteRender, songBpm);
+  if (ev.target.tagName === "CANVAS") noteManager.mouseHandler(ev, app, noteRender, songBpm);
 });
 window.addEventListener("mousemove", function (ev) {
-  if (isDragging) {
+  if (isDragging === divMain) {
     var currentPos = {
       x: ev.x,
       y: ev.y
     };
-    divPosition.x = divStartPosition.x + currentPos.x - dragStart.x;
-    divPosition.y = divStartPosition.y + currentPos.y - dragStart.y;
+    divMainPosition.x = divStartPosition.x + currentPos.x - dragStart.x;
+    divMainPosition.y = divStartPosition.y + currentPos.y - dragStart.y;
+    updateGUI();
+  } else if (isDragging === divTooltip) {
+    var _currentPos = {
+      x: ev.x,
+      y: ev.y
+    };
+    divTooltipPosition.x = divStartPosition.x + _currentPos.x - dragStart.x;
+    divTooltipPosition.y = divStartPosition.y + _currentPos.y - dragStart.y;
     updateGUI();
   }
 
-  noteManager.mouseHandler(ev, app, noteRender, songBpm);
+  if (ev.target.tagName === "CANVAS") noteManager.mouseHandler(ev, app, noteRender, songBpm);
 });
 window.addEventListener("mouseup", function (ev) {
   divStartPosition = {
@@ -54373,8 +55002,8 @@ window.addEventListener("mouseup", function (ev) {
     x: ev.x,
     y: ev.y
   };
-  isDragging = false;
-  noteManager.mouseHandler(ev, app, noteRender, songBpm);
+  isDragging = null;
+  if (ev.target.tagName === "CANVAS") noteManager.mouseHandler(ev, app, noteRender, songBpm);
 });
 window.addEventListener("dblclick", function (ev) {
   return ev.preventDefault();
@@ -54459,56 +55088,60 @@ app.ticker.add(function (delta) {
 
 function keyPress(ev) {
   //console.log(ev)
-  if (ev.key == "Home" && !sound.playing()) {
-    noteRender.setViewOffset(0);
-  } else if (ev.key == " ") {
-    if (sound.playing()) {
-      sound.stop();
-    } else {
-      sound.play();
-    }
-  } else if (ev.key == "-") {
-    timeWarp += 0.1;
-    updateGUI();
-  } else if (ev.key == "=") {
-    timeWarp -= 0.1;
-    updateGUI();
-  } else if (ev.key == "l") {
-    var input = document.createElement("input");
-    input.setAttribute("webkitdirectory", "true");
-    input.type = "file";
-    input.addEventListener("change", function (ev) {
-      var fileArray = Array.from(input.files || []);
-      fileArray.forEach(function (file) {
-        if (file.name.includes(".xmk")) {
-          _NoteLoader.NoteLoader.parseChart(file, notes).then(function (bpm) {
-            songBpm = bpm ? bpm : 120;
-            updateGUI();
-          });
-        } else if (file.name.includes(".ogg")) {
-          toBase64(file).then(function (res) {
-            if (res) {
-              sound = new _howler.Howl({
-                src: [res]
-              });
-            }
+  if (ev.target.tagName === "BODY") {
+    if (ev.key == "Home" && !sound.playing()) {
+      noteRender.setViewOffset(0);
+    } else if (ev.key == " ") {
+      if (sound.playing()) {
+        sound.stop();
+      } else {
+        sound.play();
+      }
+    } else if (ev.key == "-") {
+      timeWarp += 0.1;
+      updateGUI();
+    } else if (ev.key == "=") {
+      timeWarp -= 0.1;
+      updateGUI();
+    } else if (ev.key == "l") {
+      var input = document.createElement("input");
+      input.setAttribute("webkitdirectory", "true");
+      input.type = "file";
+      input.addEventListener("change", function (ev) {
+        var fileArray = Array.from(input.files || []);
+        fileArray.forEach(function (file) {
+          if (file.name.includes(".xmk")) {
+            _NoteLoader.NoteLoader.parseChart(file, notes).then(function (bpm) {
+              songBpm = bpm ? bpm : 120;
+              updateGUI();
+            });
+          } else if (file.name.includes(".ogg")) {
+            toBase64(file).then(function (res) {
+              if (res) {
+                sound = new _howler.Howl({
+                  src: [res]
+                });
+              }
 
-            console.log("loaded song");
-          }).catch(function (err) {
-            return console.error("LOADING FILE ERROR", err);
-          });
-        }
+              console.log("loaded song");
+            }).catch(function (err) {
+              return console.error("LOADING FILE ERROR", err);
+            });
+          }
+        });
       });
-    });
-    input.click();
-  } else if (ev.key === "e") {
-    _NoteExporter.NoteExporter.exportToFile(notes);
+      input.click();
+    } else if (ev.key === "k") {
+      _NoteExporter.NoteExporter.exportToFile(notes);
+    } else {
+      noteManager.keyHandler(ev, app, noteRender, songBpm);
+    }
   }
 }
 
 function updateGUI() {
-  divMain.style.left = divPosition.x + "px";
-  divMain.style.top = divPosition.y + "px";
+  divMain.style.left = divMainPosition.x + "px";
+  divMain.style.top = divMainPosition.y + "px";
   inputBPM.value = songBpm.toFixed(2);
   inputPos.value = noteRender.time.toFixed(2);
   inputTimeScale.value = timeWarp.toFixed(2);
@@ -54546,7 +55179,49 @@ function updateGUI() {
     divModes.children[0].classList.remove("selected");
     divModes.children[1].classList.remove("selected");
     divModes.children[2].classList.add("selected");
+  } //tooltip
+
+
+  var firstRowText = ["", "", ""];
+  var secondRowText = ["", "", ""];
+
+  if (mode === _NoteManager.Modes.add) {
+    divTooltipTable.style.display = "table";
+
+    if (cls === _NoteManager.NoteClass.TAP) {
+      firstRowText = [(0, _CustomTypes.getTypeStringName)(_CustomTypes.noteTypes.TAP_G), (0, _CustomTypes.getTypeStringName)(_CustomTypes.noteTypes.TAP_R), (0, _CustomTypes.getTypeStringName)(_CustomTypes.noteTypes.TAP_B)];
+      secondRowText = ["", "", ""];
+    } else if (cls === _NoteManager.NoteClass.SCRATCH) {
+      firstRowText = [(0, _CustomTypes.getTypeStringName)(_CustomTypes.noteTypes.SCR_G_UP), "", (0, _CustomTypes.getTypeStringName)(_CustomTypes.noteTypes.SCR_B_UP)];
+      secondRowText = [(0, _CustomTypes.getTypeStringName)(_CustomTypes.noteTypes.SCR_G_DOWN), "", (0, _CustomTypes.getTypeStringName)(_CustomTypes.noteTypes.SCR_B_DOWN)];
+    } else if (cls === _NoteManager.NoteClass.CROSS) {
+      firstRowText = [(0, _CustomTypes.getTypeStringName)(_CustomTypes.noteTypes.CROSS_G), (0, _CustomTypes.getTypeStringName)(_CustomTypes.noteTypes.CROSS_C), (0, _CustomTypes.getTypeStringName)(_CustomTypes.noteTypes.CROSS_B)];
+      secondRowText = [(0, _CustomTypes.getTypeStringName)(_CustomTypes.noteTypes.CF_SPIKE_G), (0, _CustomTypes.getTypeStringName)(_CustomTypes.noteTypes.CF_SPIKE_C), (0, _CustomTypes.getTypeStringName)(_CustomTypes.noteTypes.CF_SPIKE_B)];
+    } else if (cls === _NoteManager.NoteClass.FX) {
+      firstRowText = [(0, _CustomTypes.getTypeStringName)(_CustomTypes.noteTypes.FX_G), (0, _CustomTypes.getTypeStringName)(_CustomTypes.noteTypes.FX_ALL), (0, _CustomTypes.getTypeStringName)(_CustomTypes.noteTypes.FX_B)];
+      secondRowText = ["", "", ""];
+    } else if (cls === _NoteManager.NoteClass.FS) {
+      firstRowText = [(0, _CustomTypes.getTypeStringName)(_CustomTypes.noteTypes.FS_CROSS), (0, _CustomTypes.getTypeStringName)(_CustomTypes.noteTypes.FS_SAMPLES), (0, _CustomTypes.getTypeStringName)(_CustomTypes.noteTypes.FS_CROSS)];
+      secondRowText = [(0, _CustomTypes.getTypeStringName)(_CustomTypes.noteTypes.FS_CF_G_MARKER), "", (0, _CustomTypes.getTypeStringName)(_CustomTypes.noteTypes.FS_CF_B_MARKER)];
+    } else if (cls === _NoteManager.NoteClass.EVENTS) {
+      firstRowText = [(0, _CustomTypes.getTypeStringName)(_CustomTypes.noteTypes.REWIND), (0, _CustomTypes.getTypeStringName)(_CustomTypes.noteTypes.REWIND), (0, _CustomTypes.getTypeStringName)(_CustomTypes.noteTypes.REWIND)];
+      secondRowText = ["", "", ""];
+    }
+  } else {
+    divTooltipTable.style.display = "none";
   }
+
+  var firstRow = divTooltipTable.children[1].children[1];
+  var secondRow = divTooltipTable.children[1].children[2];
+  firstRow.children[1].innerHTML = firstRowText[0];
+  firstRow.children[2].innerHTML = firstRowText[1];
+  firstRow.children[3].innerHTML = firstRowText[2];
+  secondRow.children[1].innerHTML = secondRowText[0];
+  secondRow.children[2].innerHTML = secondRowText[1];
+  secondRow.children[3].innerHTML = secondRowText[2];
+  divTooltipPosition.x = app.renderer.width - Number(getComputedStyle(divTooltip).width.slice(0, -2)) - 10;
+  divTooltip.style.left = divTooltipPosition.x + "px";
+  divTooltip.style.top = divTooltipPosition.y + "px"; //note editor
 
   var index = -1;
 
@@ -54605,7 +55280,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "63777" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "54907" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

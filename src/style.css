@@ -17,7 +17,11 @@ table {
 	width: 100%;
 }
 
-.top {
+td {
+	text-align: center;
+}
+
+.topBar {
 	height: 20px;
 	background-color: dimgray;
 	border-color: darkgray;
@@ -41,9 +45,12 @@ table {
 }
 
 .img {
-	border-radius: 20px;
 	width: 80px;
 	height: 80px;
+}
+
+.divOption {
+	border-radius: 20px;
 }
 
 .selected {
@@ -55,12 +62,32 @@ table {
 	padding: 10px;
 }
 
+.g {
+	background-color: #22df2e;
+}
+
+.r {
+	background-color: #d21c1c;
+}
+
+.b {
+	background-color: #3d4ebe;
+}
+
 #divMain {
 	position: absolute;
 	background-color: gray;
-	overflow: hidden;
 	border-radius: 25px;
-	min-width: 250px;
+	min-width: 310px;
 	resize: both;
 	width: 310px;
+}
+
+#divTooltip {
+	position: absolute;
+	background-color: gray;
+	border-radius: 25px;
+	width: 500px;
+	font-family: sans-serif;
+	color: white;
 }

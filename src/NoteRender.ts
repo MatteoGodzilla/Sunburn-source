@@ -440,10 +440,10 @@ export class NoteRender {
 					let xRight = app.renderer.width / 2 + this.uiScale * 1
 
 					graphicsObject.graphic.beginFill(Colors.GREEN, 0.25)
-					graphicsObject.graphic.drawRect(xLeft, startHeight, this.uiScale * 1, y - startHeight)
+					graphicsObject.graphic.drawRect(xLeft, startHeight + this.padding, this.uiScale * 1, y - startHeight - this.padding)
 
 					graphicsObject.graphic.beginFill(Colors.BLUE, 0.25)
-					graphicsObject.graphic.drawRect(xRight, startHeight, this.uiScale * 1, y - startHeight)
+					graphicsObject.graphic.drawRect(xRight, startHeight + this.padding, this.uiScale * 1, y - startHeight - this.padding)
 				} else if (note.type === noteTypes.SCR_G_ZONE) {
 					x -= (note.lane == 0 ? 2 : 1) * this.uiScale
 					let crossfades: noteData[] = []
@@ -461,7 +461,7 @@ export class NoteRender {
 					if (crossfades.length === 0) {
 						//straight tail
 						let startHeight = this.getYfromTime(note.time + note.length, renderHeight)
-						graphicsObject.graphic.drawRect(x - width / 2, startHeight, width, y - startHeight)
+						graphicsObject.graphic.drawRect(x - width / 2, startHeight + this.padding, width, y - startHeight - this.padding)
 					} else {
 						let pastLane = note.lane
 						let pastTime = note.time
@@ -486,7 +486,7 @@ export class NoteRender {
 						let topY = this.getYfromTime(note.time + note.length, renderHeight)
 						let bottomY = this.getYfromTime(pastTime, renderHeight)
 
-						graphicsObject.graphic.drawRect(x - width / 2, topY, width, bottomY - topY)
+						graphicsObject.graphic.drawRect(x - width / 2, topY + this.padding, width, bottomY - topY - this.padding)
 					}
 				} else if (note.type === noteTypes.SCR_B_ZONE) {
 					x += (note.lane == 2 ? 2 : 1) * this.uiScale
@@ -543,7 +543,7 @@ export class NoteRender {
 
 					graphicsObject.graphic.beginFill(Colors.GREEN, 1.0)
 
-					graphicsObject.graphic.drawRect(x - this.uiScale * 2, startHeight + this.padding / 2, width, y - startHeight - this.padding / 2)
+					graphicsObject.graphic.drawRect(x - this.uiScale * 2, startHeight + this.padding, width, y - startHeight - this.padding)
 				} else if (note.type === noteTypes.FS_CF_B_MARKER) {
 					graphicsObject = this.getSprite(note.type)
 
@@ -555,7 +555,7 @@ export class NoteRender {
 
 					graphicsObject.graphic.beginFill(Colors.BLUE, 1.0)
 
-					graphicsObject.graphic.drawRect(x + this.uiScale * 2 - width, startHeight + this.padding / 2, width, y - startHeight - this.padding / 2)
+					graphicsObject.graphic.drawRect(x + this.uiScale * 2 - width, startHeight + this.padding, width, y - startHeight - this.padding)
 				} else if (note.type === noteTypes.CF_SPIKE_G) {
 					x -= this.uiScale * 1.5
 					graphicsObject = this.getSprite(note.type)

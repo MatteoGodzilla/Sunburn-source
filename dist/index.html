@@ -8,7 +8,7 @@
 <body>
 	<link rel="stylesheet" href="/style.c61ab535.css">
 	<div id="divMain">
-		<div class="top" id="divTopBar"></div>
+		<div class="topBar"></div>
 		<div class="content">
 			<table>
 				<colgroup>
@@ -60,18 +60,45 @@
 			</table>
 			<div class="separator"></div>
 			<div class="flex" id="divClass">
-				<img src="/green-note.c0587f96.png" class="img">
-				<img src="/anydir.214ae65a.png" class="img">
-				<img src="/crossfade.72f22819.png" class="img">
-				<img src="/fx-icon.66d73d12.png" class="img">
-				<img src="/freestyle-icon.1d7eb0e5.png" class="img">
-				<img src="/events.ce4c5df3.png" class="img">
+				<div class="divOption">
+					<img src="/green-note.c0587f96.png" class="img">
+					<label> 1 </label>
+				</div>
+				<div class="divOption">
+					<img src="/anydir.214ae65a.png" class="img">
+					<label> 2 </label>
+				</div>
+				<div class="divOption">
+					<img src="/crossfade.72f22819.png" class="img">
+					<label> 3 </label>
+				</div>
+				<div class="divOption">
+					<img src="/fx-icon.66d73d12.png" class="img">
+					<label> Q </label>
+				</div>
+				<div class="divOption">
+					<img src="/freestyle-icon.1d7eb0e5.png" class="img">
+					<label> W </label>
+				</div>
+				<div class="divOption">
+					<img src="/events.ce4c5df3.png" class="img">
+					<label> E </label>
+				</div>
 			</div>
 			<div class="separator"></div>
 			<div class="flex" id="divModes">
-				<img src="/add-button.29babbab.png" class="img">
-				<img src="/sel-button.242b9ef3.png" class="img">
-				<img src="/del-button.35db7e41.png" class="img">
+				<div class="divOption">
+					<img src="/add-button.29babbab.png" class="img">
+					<label> A </label>
+				</div>
+				<div class="divOption">
+					<img src="/sel-button.242b9ef3.png" class="img">
+					<label> S </label>
+				</div>
+				<div class="divOption">
+					<img src="/del-button.35db7e41.png" class="img">
+					<label> D </label>
+				</div>
 			</div>
 			<div class="separator"></div>
 			<table>
@@ -113,6 +140,50 @@
 						</td>
 					</tr>
 				</tbody>
+			</table>
+			<div class="separator"></div>
+		</div>
+	</div>
+	<div id="divTooltip">
+		<div class="topBar"></div>
+		<div class="content">
+			<p>
+				Shortcuts: <br>
+				-/+: Adjust visible time (y zoom)<br>
+				L: Load chart + audio <br>
+				K: Export chart <br>
+				Space: Start/Stop song <br>
+				Home: Set position to 0 (go back to chart start) <br>
+				<br>
+				<br>
+				Note: you can always change the type of the selected note, even to something completely different
+			</p>
+			<div class="separator"></div>
+			<table id="tableTooltip">
+				<colgroup>
+					<col span="1" style="width: 25%;">
+					<col span="1" style="width: 25%;">
+					<col span="1" style="width: 25%;">
+					<col span="1" style="width: 25%;">
+				</colgroup>
+				<tr>
+					<td></td>
+					<td class="g">Green</td>
+					<td class="r">Red</td>
+					<td class="b">Blue</td>
+				</tr>
+				<tr>
+					<td>Left click:</td>
+					<td class="g"></td>
+					<td class="r"></td>
+					<td class="b"></td>
+				</tr>
+				<tr>
+					<td>Right click:</td>
+					<td class="g"></td>
+					<td class="r"></td>
+					<td class="b"></td>
+				</tr>
 			</table>
 			<div class="separator"></div>
 		</div>
