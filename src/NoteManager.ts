@@ -23,7 +23,6 @@ const eventTypesList = [noteTypes.REWIND, noteTypes.STRING, noteTypes.FX_FILTER,
 export class NoteManager {
     private container: PIXI.Container
     private notes: noteData[] = []
-    private selectedTime = 0
     mode = Modes.select
     noteClass = NoteClass.TAP
     private lastCandidates: noteData[] = []
@@ -593,7 +592,7 @@ export class NoteManager {
                     } else if (this.noteClass === NoteClass.SCRATCH) {
                         selectables = [noteTypes.SCR_G_UP, noteTypes.SCR_G_DOWN, noteTypes.SCR_G_ANYDIR]
                     } else if (this.noteClass === NoteClass.CROSS) {
-                        selectables = [noteTypes.CROSS_C, noteTypes.CROSS_G, noteTypes.CF_SPIKE_G, noteTypes.CF_SPIKE_C]
+                        selectables = [noteTypes.CROSS_G, noteTypes.CF_SPIKE_G, noteTypes.CF_SPIKE_C]
                     } else if (this.noteClass === NoteClass.FX) {
                         selectables = [noteTypes.FX_G, noteTypes.FX_ALL]
                     } else if (this.noteClass === NoteClass.FS) {
@@ -609,6 +608,8 @@ export class NoteManager {
                     //red
                     if (this.noteClass === NoteClass.TAP) {
                         selectables = [noteTypes.TAP_R]
+                    } else if (this.noteClass === NoteClass.CROSS) {
+                        selectables = [noteTypes.CROSS_C]
                     } else if (this.noteClass === NoteClass.FS) {
                         selectables = [noteTypes.FS_SAMPLES]
                     } else if (this.noteClass === NoteClass.EVENTS) {
@@ -621,7 +622,7 @@ export class NoteManager {
                     } else if (this.noteClass === NoteClass.SCRATCH) {
                         selectables = [noteTypes.SCR_B_UP, noteTypes.SCR_B_DOWN, noteTypes.SCR_B_ANYDIR]
                     } else if (this.noteClass === NoteClass.CROSS) {
-                        selectables = [noteTypes.CROSS_C, noteTypes.CROSS_B, noteTypes.CF_SPIKE_B, noteTypes.CF_SPIKE_B]
+                        selectables = [noteTypes.CROSS_B, noteTypes.CF_SPIKE_B, noteTypes.CF_SPIKE_B]
                     } else if (this.noteClass === NoteClass.FX) {
                         selectables = [noteTypes.FX_B, noteTypes.FX_ALL]
                     } else if (this.noteClass === NoteClass.FS) {
@@ -675,6 +676,8 @@ export class NoteManager {
                 this.lastCandidates = candidates
             }
         }
+
+        for (let d of this.notes) d.lane = NoteLoader.getCrossAtTime(d.time, this.notes)
     }
 
     keyHandler(ev: KeyboardEvent, app: PIXI.Application, noteRender: NoteRender, baseBPM: number) {
@@ -705,6 +708,8 @@ export class NoteManager {
         } else if (ev.key === "e") {
             this.noteClass = NoteClass.EVENTS
             this.needsRefreshing = true
+        } else if (ev.key === "Delete") {
+            this.notes.splice(this.notes.indexOf(this.selectedNote), 1)
         }
     }
 

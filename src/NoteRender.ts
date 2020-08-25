@@ -505,7 +505,7 @@ export class NoteRender {
                     if (crossfades.length === 0) {
                         //straight tail
                         let startHeight = this.getYfromTime(note.time + note.length, renderHeight)
-                        graphicsObject.graphic.drawRect(x - width / 2, startHeight, width, y - startHeight)
+                        graphicsObject.graphic.drawRect(x - width / 2, startHeight + this.padding, width, y - startHeight - this.padding)
                     } else {
                         let pastLane = note.lane
                         let pastTime = note.time
@@ -530,7 +530,7 @@ export class NoteRender {
                         let topY = this.getYfromTime(note.time + note.length, renderHeight)
                         let bottomY = this.getYfromTime(pastTime, renderHeight)
 
-                        graphicsObject.graphic.drawRect(x - width / 2, topY, width, bottomY - topY)
+                        graphicsObject.graphic.drawRect(x - width / 2, topY + this.padding, width, bottomY - topY - this.padding)
                     }
                 } else if (note.type === noteTypes.FS_CF_G_MARKER) {
                     graphicsObject = this.getSprite(note.type)
@@ -630,7 +630,7 @@ export class NoteRender {
 					} */
                     ev.text.text = text
                     ev.text.position.set(x + this.uiScale / 2, y)
-                } else if (note.type !== noteTypes.CROSS_G && note.type !== noteTypes.CROSS_B && note.type !== noteTypes.CROSS_C && note.type !== noteTypes.BPM) {
+                } else if (/*note.type !== noteTypes.CROSS_G && note.type !== noteTypes.CROSS_B && note.type !== noteTypes.CROSS_C &&*/ note.type !== noteTypes.BPM) {
                     let ev = this.getEvent()
                     x += this.uiScale * 3
 

@@ -19,6 +19,13 @@ let notes: noteData[] = [
         extra: 120,
         lane: 1,
         length: 0
+    },
+    {
+        type: noteTypes.CROSS_C,
+        time: 0,
+        lane: 1,
+        length: 0,
+        extra: 0
     }
 ]
 let noteRender = new NoteRender(app)
@@ -70,7 +77,12 @@ Array.from(document.getElementsByClassName("topBar")).forEach((bar) => {
 })
 
 document.getElementById("inputBPM")?.addEventListener("change", (ev) => {
-    if (ev.srcElement) songBpm = Number((<HTMLInputElement>ev.srcElement).value)
+    if (ev.srcElement) {
+        let value = Number((<HTMLInputElement>ev.srcElement).value)
+        for (let n of notes) {
+            if (n.type === noteTypes.BPM) n.extra = value
+        }
+    }
 })
 
 document.getElementById("inputPos")?.addEventListener("change", (ev) => {
@@ -249,6 +261,8 @@ function keyPress(ev: KeyboardEvent) {
             input.click()
         } else if (ev.key === "k") {
             NoteExporter.exportToFile(notes)
+        } else if (ev.key === "c") {
+            NoteExporter.cleanupNotes(notes)
         } else {
             noteManager.keyHandler(ev, app, noteRender, songBpm)
         }
@@ -258,6 +272,10 @@ function keyPress(ev: KeyboardEvent) {
 function updateGUI() {
     divMain.style.left = divMainPosition.x + "px"
     divMain.style.top = divMainPosition.y + "px"
+
+    for (let n of notes) {
+        if (n.type === noteTypes.BPM) songBpm = n.extra
+    }
 
     inputBPM.value = songBpm.toFixed(2)
     inputPos.value = noteRender.time.toFixed(2)

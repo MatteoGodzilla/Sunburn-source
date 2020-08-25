@@ -20,9 +20,6 @@ export class NoteLoader {
 
                 if (length && stringLength) {
                     let bpm = 120
-                    let spikeCenter = false
-                    let spikeChainStarted = false
-                    let spikeChainTime = 0
                     let lastNote: noteData = { time: 0, lane: 1, length: 0, type: -1, extra: 0 }
 
                     let lastFakeBPMMeasure = 0
@@ -52,28 +49,6 @@ export class NoteLoader {
 
                             bpmTime = t
                             lastFakeBPMTime = t
-                        }
-
-                        if ((type === noteTypes.CF_SPIKE_B || type === noteTypes.CF_SPIKE_G) && bpmTime !== undefined) {
-                            if (!spikeChainStarted) {
-                                spikeChainStarted = true
-                                spikeChainTime = bpmTime
-                            } else if (!spikeCenter) {
-                                spikeCenter = true
-                                let data: noteData = {
-                                    time: lastNote.time,
-                                    type: noteTypes.CROSS_C,
-                                    lane: 1,
-                                    length: lastNote.length,
-                                    extra: lastNote.extra
-                                }
-                                arr.push(data)
-                            }
-                        }
-
-                        if (type === noteTypes.CROSS_G || type === noteTypes.CROSS_C || type === noteTypes.CROSS_B) {
-                            spikeCenter = false
-                            spikeChainStarted = false
                         }
 
                         //time === 0 and type == 0 are valid
@@ -118,6 +93,7 @@ export class NoteLoader {
                         }
                     }
                     arr.sort((a, b) => a.time - b.time)
+
                     //console.log("Loaded chart", arr)
                     return bpm
                 }
@@ -157,16 +133,35 @@ export class NoteLoader {
         }
     }
 
-    static getCrossAtTime(time: number, arr: noteData[]): number {
+    static getCrossAtTime(time: number, arr: noteData[]) {
         let cross = 1
+        let lastSpike: noteData | undefined = undefined
+        let spikeStream = false
         for (let note of arr) {
             if (note.time <= time) {
-                if (note.type === noteTypes.CROSS_G) cross = 0
-                else if (note.type === noteTypes.CROSS_C) cross = 1
-                else if (note.type === noteTypes.CROSS_B) cross = 2
-            } else if (note.time > time) break
+                if (note.type === noteTypes.CROSS_G) {
+                    cross = 0
+                    spikeStream = false
+                } else if (note.type === noteTypes.CROSS_C) {
+                    cross = 1
+                    spikeStream = false
+                } else if (note.type === noteTypes.CROSS_B) {
+                    cross = 2
+                    spikeStream = false
+                } else if (note.type === noteTypes.CF_SPIKE_G || note.type === noteTypes.CF_SPIKE_B) {
+                    if (lastSpike && lastSpike.time + 0.0625 >= note.time) {
+                        spikeStream = true
+                    }
+                    lastSpike = note
+                }
+            } else if (note.type === noteTypes.CF_SPIKE_G || note.type === noteTypes.CF_SPIKE_B) {
+                //spike after time
+                if (lastSpike) {
+                    if (note.time <= lastSpike.time + 0.0625) spikeStream = true
+                }
+            }
         }
-        return cross
+        return spikeStream ? 1 : cross
     }
 
     static readerPromise(blob: Blob) {

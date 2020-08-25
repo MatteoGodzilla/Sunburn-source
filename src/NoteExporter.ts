@@ -1,8 +1,10 @@
-import { noteData } from "./CustomTypes"
+import { noteData, noteTypes } from "./CustomTypes"
 import { saveAs } from "file-saver"
 
 export class NoteExporter {
     static exportToFile(arr: noteData[]) {
+        this.cleanupNotes(arr)
+
         let size = (arr.length + 1) * 16
 
         let buffer = new ArrayBuffer(size)
@@ -135,5 +137,74 @@ export class NoteExporter {
         result[3] = resBufferAsUI8[0]
 
         return result
+    }
+
+    static cleanupNotes(notes: noteData[]) {
+        notes.sort((a, b) => a.time - b.time)
+
+        let lastCross: noteData | undefined = undefined
+        let lastSpike: noteData | undefined = undefined
+        for (let i = 0; i < notes.length; ++i) {
+            let n = notes[i]
+            if (n.type === noteTypes.TAP_G || n.type === noteTypes.TAP_B || n.type === noteTypes.TAP_R) {
+                if (n.length === 0) n.length = 0.03125
+            } else if (n.type === noteTypes.SCR_G_UP || n.type === noteTypes.SCR_B_UP || n.type === noteTypes.SCR_G_DOWN || n.type === noteTypes.SCR_B_DOWN || n.type === noteTypes.SCR_G_ANYDIR || n.type === noteTypes.SCR_B_ANYDSCR_G_ANYDIR) {
+                if (n.length === 0) n.length = 1 / 32
+            } else if (n.type === noteTypes.CROSS_B || n.type === noteTypes.CROSS_C || n.type === noteTypes.CROSS_G) {
+                if (lastCross) {
+                    if (lastSpike) {
+                        if (lastCross.time > lastSpike.time) {
+                            //update crossfade
+                            lastCross.length = n.time - lastCross.time
+                        } else {
+                            //place crossfade after + set length
+                        }
+                    } else {
+                        //there's only the crossfade that you can update
+                        lastCross.length = n.time - lastCross.time
+                    }
+                }
+                lastCross = n
+            } else if (n.type === noteTypes.CF_SPIKE_G || n.type === noteTypes.CF_SPIKE_B || n.type === noteTypes.CF_SPIKE_C) {
+                n.length = 1 / 16
+                if (lastCross) {
+                    if (lastSpike) {
+                        if (lastCross.time > lastSpike.time) {
+                            //update crossfade
+                            lastCross.length = n.time - lastCross.time
+                        } else if (n.time - lastSpike.time > 0.0625) {
+                            //add crossfade if distance > 1/16
+                            let start = lastSpike.time + lastSpike.length
+                            let data: noteData = {
+                                time: start,
+                                type: lastCross.type,
+                                length: n.time - start,
+                                lane: 1,
+                                extra: 0
+                            }
+
+                            lastCross = data
+                            let index = notes.indexOf(lastSpike) + 1
+                            notes.splice(index, 0, data)
+                            i = index
+                        }
+                    } else {
+                        //n is the first spike
+                        lastCross.length = n.time - lastCross.time
+                    }
+                }
+
+                lastSpike = n
+            }
+        }
+        if (lastCross) {
+            if (lastSpike && lastCross.time > lastSpike.time) {
+                let lastNote = notes[notes.length - 1]
+                lastCross.length = lastNote.time - lastCross.time + 1
+            } else {
+                let lastNote = notes[notes.length - 1]
+                lastCross.length = lastNote.time - lastCross.time + 1
+            }
+        }
     }
 }
