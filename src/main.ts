@@ -111,7 +111,7 @@ document.getElementById("inputUIScale")?.addEventListener("change", (ev) => {
 document.getElementById("inputBPMRes")?.addEventListener("change", (ev) => {
     if (ev.srcElement) {
         let v = Number((<HTMLInputElement>ev.srcElement).value)
-        noteRender.bpmResolution = v !== 0 ? 1 / v : 0.25
+        noteRender.bpmResolution = v >= 1 ? 1 / v : 0.25
     }
 })
 
