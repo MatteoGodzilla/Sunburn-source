@@ -79,22 +79,33 @@ Array.from(document.getElementsByClassName("topBar")).forEach((bar) => {
 document.getElementById("inputBPM")?.addEventListener("change", (ev) => {
     if (ev.srcElement) {
         let value = Number((<HTMLInputElement>ev.srcElement).value)
-        for (let n of notes) {
-            if (n.type === noteTypes.BPM) n.extra = value
+        if(value >= 1){
+            for (let n of notes) {
+                if (n.type === noteTypes.BPM) n.extra = value
+            }
         }
     }
 })
 
 document.getElementById("inputPos")?.addEventListener("change", (ev) => {
-    if (ev.srcElement) noteRender.time = Number((<HTMLInputElement>ev.srcElement).value)
+    if (ev.srcElement) {
+        let t = Number((<HTMLInputElement>ev.srcElement).value)
+        if(t >= 0) noteRender.time = t
+    }
 })
 
 document.getElementById("inputTimeScale")?.addEventListener("change", (ev) => {
-    if (ev.srcElement) timeWarp = Number((<HTMLInputElement>ev.srcElement).value)
+    if (ev.srcElement){
+        let scale = Number((<HTMLInputElement>ev.srcElement).value)
+        if(scale >= 0.2) timeWarp = scale
+    } 
 })
 
 document.getElementById("inputUIScale")?.addEventListener("change", (ev) => {
-    if (ev.srcElement) noteRender.setScale(Number((<HTMLInputElement>ev.srcElement).value))
+    if (ev.srcElement){
+        let scale = Number((<HTMLInputElement>ev.srcElement).value)
+        if(scale >= 50) noteRender.setScale(scale)
+    } 
 })
 
 document.getElementById("inputBPMRes")?.addEventListener("change", (ev) => {
@@ -109,11 +120,17 @@ document.getElementById("inputNoteType")?.addEventListener("change", (ev) => {
 })
 
 document.getElementById("inputNoteTime")?.addEventListener("change", (ev) => {
-    if (ev.srcElement) noteManager.selectedNote.time = Number((<HTMLInputElement>ev.srcElement).value)
+    if (ev.srcElement){
+        let t = Number((<HTMLInputElement>ev.srcElement).value)
+        if (t >= 0) noteManager.selectedNote.time = t
+    } 
 })
 
 document.getElementById("inputNoteLength")?.addEventListener("change", (ev) => {
-    if (ev.srcElement) noteManager.selectedNote.length = Number((<HTMLInputElement>ev.srcElement).value)
+    if (ev.srcElement){
+        let t = Number((<HTMLInputElement>ev.srcElement).value)
+        if (t >= 0) noteManager.selectedNote.length = t
+    } 
 })
 
 document.getElementById("inputNoteExtra")?.addEventListener("change", (ev) => {
@@ -231,7 +248,7 @@ function keyPress(ev: KeyboardEvent) {
             timeWarp += 0.1
             updateGUI()
         } else if (ev.key == "=") {
-            timeWarp -= 0.1
+            timeWarp -= timeWarp >= 0.2 ? 0.1 : 0.0
             updateGUI()
         } else if (ev.key == "l") {
             let input = document.createElement("input")
