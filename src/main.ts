@@ -240,19 +240,22 @@ function keyPress(ev: KeyboardEvent) {
             input.addEventListener("change", (ev) => {
                 let fileArray = Array.from(input.files || [])
 
+                //console.log(fileArray)
                 fileArray.forEach((file) => {
                     if (file.name.includes(".xmk")) {
+                        //console.log("parsing", file)
                         NoteLoader.parseChart(file, notes).then((bpm) => {
                             songBpm = bpm ? bpm : 120
+                            //console.log(notes)
                             updateGUI()
                         })
-                    } else if (file.name.includes(".ogg")) {
+                    } else{
                         toBase64(file)
                             .then((res) => {
-                                if (res) {
+                                if (res.includes("data:audio")) {
                                     sound = new Howl({ src: [res] })
+                                    console.log("loaded song")
                                 }
-                                console.log("loaded song")
                             })
                             .catch((err) => console.error("LOADING FILE ERROR", err))
                     }
@@ -336,7 +339,7 @@ function updateGUI() {
             firstRowText = [getTypeStringName(noteTypes.FS_CROSS), getTypeStringName(noteTypes.FS_SAMPLES), getTypeStringName(noteTypes.FS_CROSS)]
             secondRowText = [getTypeStringName(noteTypes.FS_CF_G_MARKER), "", getTypeStringName(noteTypes.FS_CF_B_MARKER)]
         } else if (cls === NoteClass.EVENTS) {
-            firstRowText = [getTypeStringName(noteTypes.REWIND), getTypeStringName(noteTypes.REWIND), getTypeStringName(noteTypes.REWIND)]
+            firstRowText = [getTypeStringName(noteTypes.SCR_G_ZONE), getTypeStringName(noteTypes.EUPHORIA), getTypeStringName(noteTypes.SCR_B_ZONE)]
             secondRowText = ["", "", ""]
         }
     } else {

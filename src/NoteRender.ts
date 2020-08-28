@@ -418,7 +418,7 @@ export class NoteRender {
 
                     let startHeight = this.getYfromTime(note.time + note.length, renderHeight)
 
-                    graphicsObject.graphic.drawRect(x, startHeight, this.uiScale * 5, y - startHeight)
+                    graphicsObject.graphic.drawRect(x, startHeight + this.padding, this.uiScale * 5, y - startHeight - this.padding)
                 } else if (note.type === noteTypes.FS_SAMPLES) {
                     graphicsObject = this.getSprite(note.type)
                     let startHeight = this.getYfromTime(note.time + note.length, renderHeight)

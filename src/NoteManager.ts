@@ -384,7 +384,19 @@ export class NoteManager {
                         }
                     }
                 } else if (this.noteClass === NoteClass.EVENTS) {
-                    if (ev.which === 1) {
+                    if(lane === -3 && ev.which === 1){
+                        data.type = noteTypes.BPM_FAKE
+                        this.notes.push(data)
+                    } else if((lane === -2 || lane === -1) && ev.which === 1){
+                        data.type = noteTypes.SCR_G_ZONE
+                        this.notes.push(data)
+                    } else if(lane === 0 && ev.which === 1){
+                        data.type = noteTypes.EUPHORIA
+                        this.notes.push(data)
+                    } else if((lane === 1 || lane === 2) && ev.which === 1){
+                        data.type = noteTypes.SCR_B_ZONE
+                        this.notes.push(data)
+                    } else if(lane === 3 && ev.which === 1){
                         data.type = noteTypes.REWIND
                         this.notes.push(data)
                     }
@@ -527,14 +539,35 @@ export class NoteManager {
                         }
                     }
                 } else if (this.noteClass === NoteClass.EVENTS) {
-                    if (lane === -3) {
+                    if(lane === -3){
                         for (let n of this.notes) {
                             if ((n.type === noteTypes.BPM || n.type === noteTypes.BPM_FAKE) && n.time <= closestBeat && closestBeat <= n.time + n.length) {
                                 this.notes.splice(this.notes.indexOf(n), 1)
                                 break
                             }
                         }
-                    } else if (lane === 3) {
+                    } else if((lane === -2 || lane === -1)){
+                        for (let n of this.notes) {
+                            if (n.type === noteTypes.SCR_G_ZONE && n.time <= closestBeat && closestBeat <= n.time + n.length) {
+                                this.notes.splice(this.notes.indexOf(n), 1)
+                                break
+                            }
+                        }
+                    } else if(lane === 0){
+                        for (let n of this.notes) {
+                            if (n.type === noteTypes.EUPHORIA && n.time <= closestBeat && closestBeat <= n.time + n.length) {
+                                this.notes.splice(this.notes.indexOf(n), 1)
+                                break
+                            }
+                        }
+                    } else if((lane === 1 || lane === 2)){
+                        for (let n of this.notes) {
+                            if (n.type === noteTypes.SCR_B_ZONE && n.time <= closestBeat && closestBeat <= n.time + n.length) {
+                                this.notes.splice(this.notes.indexOf(n), 1)
+                                break
+                            }
+                        }
+                    } else if(lane === 3){
                         for (let n of this.notes) {
                             if (eventTypesList.includes(n.type) && n.time <= closestBeat && closestBeat <= n.time + n.length) {
                                 this.notes.splice(this.notes.indexOf(n), 1)
@@ -554,23 +587,31 @@ export class NoteManager {
                 //console.log(this.notes.length)
             }
         } else if (ev.type === "mousemove") {
+            let mouseTime = this.getTimeFromY(ev, app, noteRender)
+
+            let lastBPMChange: noteData = { time: 0, type: 0, length: 0, lane: 0, extra: 0 }
+            for (let n of this.notes) {
+                if ((n.type === noteTypes.BPM || n.type === noteTypes.BPM_FAKE) && n.time <= mouseTime) lastBPMChange = n
+            }
+            let tickDelta = (noteRender.bpmResolution * baseBPM) / lastBPMChange.extra
+            let closestBeat = Math.round((mouseTime - lastBPMChange.time) / tickDelta) * tickDelta + lastBPMChange.time
+
+            if (ev.which === 1){
+                //holding down left button
+                if (this.selectedNote.type === noteTypes.FX_G || this.selectedNote.type === noteTypes.FX_ALL || this.selectedNote.type === noteTypes.FX_B) {
+                    for (let n of this.notes) {
+                        if (eventTypesList.includes(n.type) && n.time === this.selectedNote.time) n.time = closestBeat
+                    }
+                }
+                this.selectedNote.time = closestBeat
+            }
             if (ev.which === 3) {
                 //holding down right button
-                let mouseTime = this.getTimeFromY(ev, app, noteRender)
-
-                let lastBPMChange: noteData = { time: 0, type: 0, length: 0, lane: 0, extra: 0 }
-                for (let n of this.notes) {
-                    if ((n.type === noteTypes.BPM || n.type === noteTypes.BPM_FAKE) && n.time <= mouseTime) lastBPMChange = n
-                }
-                let tickDelta = (noteRender.bpmResolution * baseBPM) / lastBPMChange.extra
-                let closestBeat = Math.round((mouseTime - lastBPMChange.time) / tickDelta) * tickDelta + lastBPMChange.time
-
                 if (closestBeat >= this.selectedNote.time) {
                     this.selectedNote.length = closestBeat - this.selectedNote.time
                     if (this.selectedNote.type === noteTypes.FX_G || this.selectedNote.type === noteTypes.FX_ALL || this.selectedNote.type === noteTypes.FX_B) {
-                        let possible = [noteTypes.REWIND, noteTypes.STRING, noteTypes.FX_FILTER, noteTypes.FX_BEATROLL, noteTypes.FX_BITREDUCTION, noteTypes.FX_WAHWAH, noteTypes.FX_RINGMOD, noteTypes.FX_STUTTER, noteTypes.FX_FLANGER, noteTypes.FX_ROBOT, noteTypes.FX_BEATROLLAUTO, noteTypes.FX_DELAY, noteTypes.BATTLE_MARKER]
                         for (let n of this.notes) {
-                            if (possible.includes(n.type) && n.time === this.selectedNote.time) n.length = closestBeat - this.selectedNote.time
+                            if (eventTypesList.includes(n.type) && n.time === this.selectedNote.time) n.length = closestBeat - this.selectedNote.time
                         }
                     }
                 }

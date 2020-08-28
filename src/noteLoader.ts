@@ -4,6 +4,7 @@ export class NoteLoader {
     static parseChart(f: File, arr: noteData[]) {
         return this.readerPromise(f).then((result) => {
             arr.splice(0, arr.length)
+            //console.log(result)
             if (result !== null) {
                 let buffer = new ArrayBuffer(result.toString().length)
                 let binaryDataAsUInt = new Uint8Array(buffer)
@@ -16,9 +17,9 @@ export class NoteLoader {
                 const length = this.parseBinaryInt(buffer, 8)
                 const stringLength = this.parseBinaryInt(buffer, 12)
 
-                //console.log(length)
+                //console.log(length,stringLength)
 
-                if (length && stringLength) {
+                if (length !== undefined && stringLength !== undefined) {
                     let bpm = 120
                     let lastNote: noteData = { time: 0, lane: 1, length: 0, type: -1, extra: 0 }
 
