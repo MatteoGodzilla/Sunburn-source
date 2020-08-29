@@ -28,7 +28,7 @@ export class NoteManager {
     private lastCandidates: noteData[] = []
     private lastCandidateIndex = 0
 
-    selectedNote: noteData = { type: 0, time: 0, lane: 0, length: 0, extra: 0 }
+    selectedNote: noteData = { type: -1, time: 0, lane: 0, length: 0, extra: 0 }
     needsRefreshing = false
 
     constructor(app: PIXI.Application, notes: noteData[]) {
@@ -384,19 +384,19 @@ export class NoteManager {
                         }
                     }
                 } else if (this.noteClass === NoteClass.EVENTS) {
-                    if(lane === -3 && ev.which === 1){
+                    if (lane === -3 && ev.which === 1) {
                         data.type = noteTypes.BPM_FAKE
                         this.notes.push(data)
-                    } else if((lane === -2 || lane === -1) && ev.which === 1){
+                    } else if ((lane === -2 || lane === -1) && ev.which === 1) {
                         data.type = noteTypes.SCR_G_ZONE
                         this.notes.push(data)
-                    } else if(lane === 0 && ev.which === 1){
+                    } else if (lane === 0 && ev.which === 1) {
                         data.type = noteTypes.EUPHORIA
                         this.notes.push(data)
-                    } else if((lane === 1 || lane === 2) && ev.which === 1){
+                    } else if ((lane === 1 || lane === 2) && ev.which === 1) {
                         data.type = noteTypes.SCR_B_ZONE
                         this.notes.push(data)
-                    } else if(lane === 3 && ev.which === 1){
+                    } else if (lane === 3 && ev.which === 1) {
                         data.type = noteTypes.REWIND
                         this.notes.push(data)
                     }
@@ -539,35 +539,35 @@ export class NoteManager {
                         }
                     }
                 } else if (this.noteClass === NoteClass.EVENTS) {
-                    if(lane === -3){
+                    if (lane === -3) {
                         for (let n of this.notes) {
                             if ((n.type === noteTypes.BPM || n.type === noteTypes.BPM_FAKE) && n.time <= closestBeat && closestBeat <= n.time + n.length) {
                                 this.notes.splice(this.notes.indexOf(n), 1)
                                 break
                             }
                         }
-                    } else if((lane === -2 || lane === -1)){
+                    } else if (lane === -2 || lane === -1) {
                         for (let n of this.notes) {
                             if (n.type === noteTypes.SCR_G_ZONE && n.time <= closestBeat && closestBeat <= n.time + n.length) {
                                 this.notes.splice(this.notes.indexOf(n), 1)
                                 break
                             }
                         }
-                    } else if(lane === 0){
+                    } else if (lane === 0) {
                         for (let n of this.notes) {
                             if (n.type === noteTypes.EUPHORIA && n.time <= closestBeat && closestBeat <= n.time + n.length) {
                                 this.notes.splice(this.notes.indexOf(n), 1)
                                 break
                             }
                         }
-                    } else if((lane === 1 || lane === 2)){
+                    } else if (lane === 1 || lane === 2) {
                         for (let n of this.notes) {
                             if (n.type === noteTypes.SCR_B_ZONE && n.time <= closestBeat && closestBeat <= n.time + n.length) {
                                 this.notes.splice(this.notes.indexOf(n), 1)
                                 break
                             }
                         }
-                    } else if(lane === 3){
+                    } else if (lane === 3) {
                         for (let n of this.notes) {
                             if (eventTypesList.includes(n.type) && n.time <= closestBeat && closestBeat <= n.time + n.length) {
                                 this.notes.splice(this.notes.indexOf(n), 1)
@@ -585,40 +585,7 @@ export class NoteManager {
                 this.needsRefreshing = true
 
                 //console.log(this.notes.length)
-            }
-        } else if (ev.type === "mousemove") {
-            let mouseTime = this.getTimeFromY(ev, app, noteRender)
-
-            let lastBPMChange: noteData = { time: 0, type: 0, length: 0, lane: 0, extra: 0 }
-            for (let n of this.notes) {
-                if ((n.type === noteTypes.BPM || n.type === noteTypes.BPM_FAKE) && n.time <= mouseTime) lastBPMChange = n
-            }
-            let tickDelta = (noteRender.bpmResolution * baseBPM) / lastBPMChange.extra
-            let closestBeat = Math.round((mouseTime - lastBPMChange.time) / tickDelta) * tickDelta + lastBPMChange.time
-
-            if (ev.which === 1){
-                //holding down left button
-                if (this.selectedNote.type === noteTypes.FX_G || this.selectedNote.type === noteTypes.FX_ALL || this.selectedNote.type === noteTypes.FX_B) {
-                    for (let n of this.notes) {
-                        if (eventTypesList.includes(n.type) && n.time === this.selectedNote.time) n.time = closestBeat
-                    }
-                }
-                this.selectedNote.time = closestBeat
-            }
-            if (ev.which === 3) {
-                //holding down right button
-                if (closestBeat >= this.selectedNote.time) {
-                    this.selectedNote.length = closestBeat - this.selectedNote.time
-                    if (this.selectedNote.type === noteTypes.FX_G || this.selectedNote.type === noteTypes.FX_ALL || this.selectedNote.type === noteTypes.FX_B) {
-                        for (let n of this.notes) {
-                            if (eventTypesList.includes(n.type) && n.time === this.selectedNote.time) n.length = closestBeat - this.selectedNote.time
-                        }
-                    }
-                }
-                this.needsRefreshing = true
-            }
-        } else if (ev.type === "mouseup") {
-            if (this.mode === Modes.select) {
+            } else if (this.mode === Modes.select) {
                 let selectables: noteTypes[] = []
 
                 let mouseTime = this.getTimeFromY(ev, app, noteRender)
@@ -711,12 +678,45 @@ export class NoteManager {
                         this.selectedNote = candidates[bestIndex]
                         candidates[bestIndex].selected = true
                     }
+                } else {
+                    this.selectedNote = { type: -1, time: 0, lane: 0, length: 0, extra: 0 }
                 }
                 this.needsRefreshing = true
 
                 this.lastCandidates = candidates
             }
-        }
+        } else if (ev.type === "mousemove") {
+            let mouseTime = this.getTimeFromY(ev, app, noteRender)
+
+            let lastBPMChange: noteData = { time: 0, type: 0, length: 0, lane: 0, extra: 0 }
+            for (let n of this.notes) {
+                if ((n.type === noteTypes.BPM || n.type === noteTypes.BPM_FAKE) && n.time <= mouseTime) lastBPMChange = n
+            }
+            let tickDelta = (noteRender.bpmResolution * baseBPM) / lastBPMChange.extra
+            let closestBeat = Math.round((mouseTime - lastBPMChange.time) / tickDelta) * tickDelta + lastBPMChange.time
+
+            if (ev.which === 1) {
+                //holding down left button
+                if (this.selectedNote.type === noteTypes.FX_G || this.selectedNote.type === noteTypes.FX_ALL || this.selectedNote.type === noteTypes.FX_B) {
+                    for (let n of this.notes) {
+                        if (eventTypesList.includes(n.type) && n.time === this.selectedNote.time) n.time = closestBeat
+                    }
+                }
+                if(this.selectedNote.type !== -1) this.selectedNote.time = closestBeat
+            }
+            if (ev.which === 3) {
+                //holding down right button
+                if (closestBeat >= this.selectedNote.time && this.selectedNote.type !== -1) {
+                    this.selectedNote.length = closestBeat - this.selectedNote.time
+                    if (this.selectedNote.type === noteTypes.FX_G || this.selectedNote.type === noteTypes.FX_ALL || this.selectedNote.type === noteTypes.FX_B) {
+                        for (let n of this.notes) {
+                            if (eventTypesList.includes(n.type) && n.time === this.selectedNote.time) n.length = closestBeat - this.selectedNote.time
+                        }
+                    }
+                }
+                this.needsRefreshing = true
+            }
+        } else if (ev.type === "mouseup") 
 
         for (let d of this.notes) d.lane = NoteLoader.getCrossAtTime(d.time, this.notes)
     }

@@ -5,7 +5,7 @@
   "main": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prettier": "prettier --write ./src",
+    "prettier": "prettier --write ./src index.html",
     "serve": "parcel serve index.html"
   },
   "keywords": [

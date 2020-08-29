@@ -54,6 +54,7 @@ export class NoteRender {
     timeScale = 100
     clickerOffset = 100
     bpmResolution = 1 / 4
+    bpmTickTimeVisible = true
     private crossPosition = 1
     private padding = 10
 
@@ -603,7 +604,7 @@ export class NoteRender {
                     graphicsObject.sprite.zIndex = Layers.NOTE
                 } else if (note.type === noteTypes.BPM_FAKE) {
                     let ev = this.getEvent()
-                    x -= this.uiScale * 4
+                    x -= this.uiScale * 4.5
 
                     //let lengthY = renderHeight - ((note.time + note.length - this.time) / this.timeScale) * renderHeight
 
@@ -672,9 +673,28 @@ export class NoteRender {
         }
     }
 
+    getNearestBPMBeat(time:number,notes:noteData[],baseBPM:number){
+        if(time >= 0){
+            let lastBPMChange: noteData = { time: 0, type: 0, length: 0, lane: 0, extra: 0 }
+            for (let n of notes) {
+                if ((n.type === noteTypes.BPM || n.type === noteTypes.BPM_FAKE) && n.time <= time) lastBPMChange = n
+            }
+            let tickDelta = (this.bpmResolution * baseBPM) / lastBPMChange.extra
+            let closestBeat = Math.round((time - lastBPMChange.time) / tickDelta) * tickDelta + lastBPMChange.time
+            return closestBeat
+        }
+        return 0
+    }
+
     bpmRender(app: PIXI.Application, notes: noteData[], baseBPM: number) {
+        for(let c of this.bpmContainer.children){
+            if(c instanceof PIXI.Graphics) c.destroy()
+        }
+        
         this.bpmContainer.removeChildren()
         let renderHeight = app.renderer.height - this.clickerOffset
+        let height = 20
+        let textStyle = new PIXI.TextStyle({ fontSize: height, fill: "white" })
 
         for (let t = this.time; t < this.time + this.timeScale; ) {
             let lastBPMChange: noteData = { time: 0, type: 0, length: 0, lane: 0, extra: 0 }
@@ -682,21 +702,37 @@ export class NoteRender {
                 if ((n.type === noteTypes.BPM || n.type === noteTypes.BPM_FAKE) && n.time <= t) lastBPMChange = n
             }
             let tickDelta = (this.bpmResolution * baseBPM) / lastBPMChange.extra
-            let closestBeat = Math.ceil((t - lastBPMChange.time) / tickDelta) * tickDelta + lastBPMChange.time
+            let closestBeat = Math.round((t - lastBPMChange.time) / tickDelta) * tickDelta + lastBPMChange.time
 
             let y = renderHeight - ((closestBeat - this.time) / this.timeScale) * renderHeight
 
             let g = new PIXI.Graphics()
             g.beginFill(Colors.GRAY)
-            let height = 20
             g.drawRect(app.renderer.width / 2 - 2 * this.uiScale, y - height / 2, 4 * this.uiScale, height)
+            
             this.bpmContainer.addChild(g)
+            if(this.bpmTickTimeVisible){
+                let text = new PIXI.Text(closestBeat.toFixed(3),textStyle)
+                text.anchor.set(0.5,0.5)
+                text.position.set(app.renderer.width / 2 - 3 * this.uiScale,y)
+                this.bpmContainer.addChild(text)
+            }
+            
             t += tickDelta
         }
     }
 
-    moveView(delta: number) {
-        this.time += (delta >= 0 ? this.timeScale : -this.timeScale) / 5
+    moveView(delta: number,notes:noteData[],baseBPM:number) {
+        this.time = this.getNearestBPMBeat(this.time,notes,baseBPM)
+        let lastBPMChange: noteData = { time: 0, type: 0, length: 0, lane: 0, extra: 0 }
+        for (let n of notes) {
+            if ((n.type === noteTypes.BPM || n.type === noteTypes.BPM_FAKE) && n.time <= this.time) lastBPMChange = n
+        }
+        let tickDelta = (this.bpmResolution * baseBPM) / lastBPMChange.extra
+
+        this.time += (delta >= 0 ? tickDelta : -tickDelta)
+
+        //this.time += (delta >= 0 ? this.timeScale : -this.timeScale) / 5
         if (this.time < 0) this.time = 0
     }
 
