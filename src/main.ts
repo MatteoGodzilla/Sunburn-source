@@ -1,7 +1,7 @@
 import * as PIXI from "pixi.js"
 import { noteData, getTypeStringName, noteTypes } from "./CustomTypes"
 import { NoteRender } from "./NoteRender"
-import { Howl,Howler } from "howler"
+import { AudioMan,sourceID } from "./AudioMan"
 import { NoteLoader } from "./NoteLoader"
 import { NoteExporter } from "./NoteExporter"
 import { NoteManager, NoteClass, Modes } from "./NoteManager"
@@ -11,6 +11,8 @@ let app = new PIXI.Application({
     height: window.innerHeight
 })
 document.body.appendChild(app.view)
+
+let audioManager = new AudioMan()
 
 let notes: noteData[] = [
     {
@@ -36,9 +38,13 @@ let needsRefresh = false
 let timeWarp = 1.5
 let songBpm = 120
 
-let greenAudioSource = new Howl({ src: [""] })
-let redAudioSource = new Howl({ src: [""] })
-let blueAudioSource = new Howl({ src: [""] })
+let greenStartTime = 0
+let redStartTime = 0
+let blueStartTime = 0
+
+let greenOffset = 0
+let redOffset = 0
+let blueOffset = 0
 
 let divStartPosition = { x: 0, y: 0 }
 let divMainPosition = { x: 10, y: 10 }
@@ -64,6 +70,15 @@ let inputNoteType = <HTMLSelectElement>document.getElementById("inputNoteType")
 let inputNoteTime = <HTMLInputElement>document.getElementById("inputNoteTime")
 let inputNoteLength = <HTMLInputElement>document.getElementById("inputNoteLength")
 let inputNoteExtra = <HTMLInputElement>document.getElementById("inputNoteExtra")
+
+let divDropGreen = <HTMLDivElement>document.getElementById("divDropGreen")
+let divDropRed = <HTMLDivElement>document.getElementById("divDropRed")
+let divDropBlue = <HTMLDivElement>document.getElementById("divDropBlue")
+let divDropChart = <HTMLDivElement>document.getElementById("divDropChart")
+
+let inputOffsetGreen = <HTMLInputElement>document.getElementById("inputOffsetGreen")
+let inputOffsetRed = <HTMLInputElement>document.getElementById("inputOffsetRed")
+let inputOffsetBlue = <HTMLInputElement>document.getElementById("inputOffsetBlue")
 
 Array.from(document.getElementsByClassName("topBar")).forEach((bar) => {
     ;(<HTMLDivElement>bar).addEventListener("mousedown", (ev) => {
@@ -99,7 +114,7 @@ for (let i = 0; i < arr.length; ++i) {
     })
 }
 
-document.getElementById("inputBPM")?.addEventListener("change", (ev) => {
+inputBPM?.addEventListener("change", (ev) => {
     if (ev.srcElement) {
         let value = Number((<HTMLInputElement>ev.srcElement).value)
         if (value >= 1) {
@@ -110,53 +125,53 @@ document.getElementById("inputBPM")?.addEventListener("change", (ev) => {
     }
 })
 
-document.getElementById("inputPos")?.addEventListener("change", (ev) => {
+inputPos?.addEventListener("change", (ev) => {
     if (ev.srcElement) {
         let t = Number((<HTMLInputElement>ev.srcElement).value)
         if (t >= 0) noteRender.time = t
     }
 })
 
-document.getElementById("inputTimeScale")?.addEventListener("change", (ev) => {
+inputTimeScale?.addEventListener("change", (ev) => {
     if (ev.srcElement) {
         let scale = Number((<HTMLInputElement>ev.srcElement).value)
         if (scale >= 0.2) timeWarp = scale
     }
 })
 
-document.getElementById("inputUIScale")?.addEventListener("change", (ev) => {
+inputUIScale?.addEventListener("change", (ev) => {
     if (ev.srcElement) {
         let scale = Number((<HTMLInputElement>ev.srcElement).value)
         if (scale >= 50) noteRender.setScale(scale)
     }
 })
 
-document.getElementById("inputBPMRes")?.addEventListener("change", (ev) => {
+inputBPMRes?.addEventListener("change", (ev) => {
     if (ev.srcElement) {
         let v = Number((<HTMLInputElement>ev.srcElement).value)
         noteRender.bpmResolution = v >= 1 ? 1 / v : 0.25
     }
 })
 
-document.getElementById("inputNoteType")?.addEventListener("change", (ev) => {
+inputNoteType?.addEventListener("change", (ev) => {
     if (ev.srcElement) noteManager.selectedNote.type = Number((<HTMLSelectElement>ev.srcElement).value)
 })
 
-document.getElementById("inputNoteTime")?.addEventListener("change", (ev) => {
+inputNoteTime?.addEventListener("change", (ev) => {
     if (ev.srcElement) {
         let t = Number((<HTMLInputElement>ev.srcElement).value)
         if (t >= 0) noteManager.selectedNote.time = t
     }
 })
 
-document.getElementById("inputNoteLength")?.addEventListener("change", (ev) => {
+inputNoteLength?.addEventListener("change", (ev) => {
     if (ev.srcElement) {
         let t = Number((<HTMLInputElement>ev.srcElement).value)
         if (t >= 0) noteManager.selectedNote.length = t
     }
 })
 
-document.getElementById("inputNoteExtra")?.addEventListener("change", (ev) => {
+inputNoteExtra?.addEventListener("change", (ev) => {
     if (ev.srcElement) noteManager.selectedNote.extra = Number((<HTMLInputElement>ev.srcElement).value)
 })
 
@@ -168,165 +183,134 @@ document.getElementById("inputShortcutsToggle")?.addEventListener("change",ev =>
 
 document.getElementById("inputTickTime")?.addEventListener("change",ev =>{
     if(ev.srcElement && noteRender) {
-        noteRender.bpmTickTimeVisible = (<HTMLInputElement>ev.srcElement).checked
+        noteRender.renderBPMTicks = (<HTMLInputElement>ev.srcElement).checked
     }
 })
 
+document.getElementById("inputWaveform")?.addEventListener("change",ev =>{
+    if(ev.srcElement && noteRender) {
+        noteRender.renderWaveform = (<HTMLInputElement>ev.srcElement).checked
+    }
+})
 
-document.getElementById("divDropGreen")?.addEventListener("click",ev =>{
+divDropGreen?.addEventListener("click",ev =>{
     //console.log(ev)
     let input = document.createElement("input")
     input.type = "file"
     input.addEventListener("change", (ev) => {
         if(input.files){
             let file = input.files[0]
-
-            //console.log(fileArray)
-            toBase64(file)
-                .then((res) => {
-                    if (res.includes("data:audio")) {
-                        greenAudioSource = new Howl({ src: [res] })
-                        console.log("loaded green track")
-                        }
-                    })
-                .catch((err) => console.error("LOADING FILE ERROR", err))
+            toArrayBuffer(file).then(array => {
+                audioManager.loadFile(array,sourceID.AUDIO_G)
+            })
         }
     })
     input.click()
 })
-document.getElementById("divDropGreen")?.addEventListener("drop",ev =>{
+divDropGreen?.addEventListener("drop",ev =>{
     if(ev.dataTransfer){
         let file = ev.dataTransfer.files[0]
-        toBase64(file)
-            .then((res) => {
-                if (res.includes("data:audio")) {
-                    greenAudioSource = new Howl({ src: [res] })
-                    console.log("loaded green track")
-                }
-            })
-            .catch((err) => console.error("LOADING FILE ERROR", err))
+        toArrayBuffer(file).then(array => {
+            audioManager.loadFile(array,sourceID.AUDIO_G)
+        })
     }
     if(ev.srcElement){
         (<HTMLDivElement>ev.srcElement).classList.remove("selected")
     }
     ev.preventDefault()
 })
-document.getElementById("divDropGreen")?.addEventListener("dragenter",ev => {
+divDropGreen?.addEventListener("dragenter",ev => {
     if(ev.srcElement){
         (<HTMLDivElement>ev.srcElement).classList.add("selected")
     }
     ev.preventDefault()
 })
-document.getElementById("divDropGreen")?.addEventListener("dragleave",ev => {
+divDropGreen?.addEventListener("dragleave",ev => {
     if(ev.target){
         (<HTMLDivElement>ev.srcElement).classList.remove("selected")
     }
     ev.preventDefault()
 })
 
-document.getElementById("divDropRed")?.addEventListener("click",ev =>{
+divDropRed?.addEventListener("click",ev =>{
     //console.log(ev)
     let input = document.createElement("input")
     input.type = "file"
     input.addEventListener("change", (ev) => {
         if(input.files){
             let file = input.files[0]
-
-            //console.log(fileArray)
-            toBase64(file)
-                .then((res) => {
-                    if (res.includes("data:audio")) {
-                        redAudioSource = new Howl({ src: [res] })
-                        console.log("loaded green track")
-                        }
-                    })
-                .catch((err) => console.error("LOADING FILE ERROR", err))
+            toArrayBuffer(file).then(array => {
+                audioManager.loadFile(array,sourceID.AUDIO_R)
+            })
         }
     })
     input.click()
 })
-document.getElementById("divDropRed")?.addEventListener("drop",ev =>{
+divDropRed?.addEventListener("drop",ev =>{
     if(ev.dataTransfer){
         let file = ev.dataTransfer.files[0]
-        toBase64(file)
-            .then((res) => {
-                if (res.includes("data:audio")) {
-                    redAudioSource = new Howl({ src: [res] })
-                    console.log("loaded green track")
-                }
-            })
-            .catch((err) => console.error("LOADING FILE ERROR", err))
+        toArrayBuffer(file).then(array => {
+            audioManager.loadFile(array,sourceID.AUDIO_R)
+        })
     }
     if(ev.srcElement){
         (<HTMLDivElement>ev.srcElement).classList.remove("selected")
     }
     ev.preventDefault()
 })
-document.getElementById("divDropRed")?.addEventListener("dragenter",ev => {
+divDropRed?.addEventListener("dragenter",ev => {
     if(ev.srcElement){
         (<HTMLDivElement>ev.srcElement).classList.add("selected")
     }
     ev.preventDefault()
 })
-document.getElementById("divDropRed")?.addEventListener("dragleave",ev => {
+divDropRed?.addEventListener("dragleave",ev => {
     if(ev.target){
         (<HTMLDivElement>ev.srcElement).classList.remove("selected")
     }
     ev.preventDefault()
 })
 
-document.getElementById("divDropBlue")?.addEventListener("click",ev =>{
+divDropBlue?.addEventListener("click",ev =>{
     //console.log(ev)
     let input = document.createElement("input")
     input.type = "file"
     input.addEventListener("change", (ev) => {
         if(input.files){
             let file = input.files[0]
-
-            //console.log(fileArray)
-            toBase64(file)
-                .then((res) => {
-                    if (res.includes("data:audio")) {
-                        blueAudioSource = new Howl({ src: [res] })
-                        console.log("loaded green track")
-                        }
-                    })
-                .catch((err) => console.error("LOADING FILE ERROR", err))
+            toArrayBuffer(file).then(array => {
+                audioManager.loadFile(array,sourceID.AUDIO_B)
+            })
         }
     })
     input.click()
 })
-document.getElementById("divDropBlue")?.addEventListener("drop",ev =>{
+divDropBlue?.addEventListener("drop",ev =>{
     if(ev.dataTransfer){
         let file = ev.dataTransfer.files[0]
-        toBase64(file)
-            .then((res) => {
-                if (res.includes("data:audio")) {
-                    blueAudioSource = new Howl({ src: [res] })
-                    console.log("loaded green track")
-                }
-            })
-            .catch((err) => console.error("LOADING FILE ERROR", err))
+        toArrayBuffer(file).then(array => {
+            audioManager.loadFile(array,sourceID.AUDIO_B)
+        })
     }
     if(ev.srcElement){
         (<HTMLDivElement>ev.srcElement).classList.remove("selected")
     }
     ev.preventDefault()
 })
-document.getElementById("divDropBlue")?.addEventListener("dragenter",ev =>{
+divDropBlue?.addEventListener("dragenter",ev =>{
     if(ev.srcElement){
         (<HTMLDivElement>ev.srcElement).classList.add("selected")
     }
     ev.preventDefault()
 })
-document.getElementById("divDropBlue")?.addEventListener("dragleave",ev =>{
+divDropBlue?.addEventListener("dragleave",ev =>{
     if(ev.target){
         (<HTMLDivElement>ev.srcElement).classList.remove("selected")
     }
     ev.preventDefault()
 })
 
-document.getElementById("divDropChart")?.addEventListener("click",ev =>{
+divDropChart?.addEventListener("click",ev =>{
     //console.log(ev)
     let input = document.createElement("input")
     input.type = "file"
@@ -343,7 +327,7 @@ document.getElementById("divDropChart")?.addEventListener("click",ev =>{
     })
     input.click()
 })
-document.getElementById("divDropChart")?.addEventListener("drop",ev =>{
+divDropChart?.addEventListener("drop",ev =>{
     if(ev.dataTransfer){
         let file = ev.dataTransfer.files[0]
         if(file.name.toLowerCase().includes(".xmk")){
@@ -358,39 +342,57 @@ document.getElementById("divDropChart")?.addEventListener("drop",ev =>{
     }
     ev.preventDefault()
 })
-document.getElementById("divDropChart")?.addEventListener("dragenter",ev =>{
+divDropChart?.addEventListener("dragenter",ev =>{
     if(ev.srcElement){
         (<HTMLDivElement>ev.srcElement).classList.add("selected")
     }
     ev.preventDefault()
 })
-document.getElementById("divDropChart")?.addEventListener("dragleave",ev =>{
+divDropChart?.addEventListener("dragleave",ev =>{
     if(ev.target){
         (<HTMLDivElement>ev.srcElement).classList.remove("selected")
     }
     ev.preventDefault()
 })
 
-document.getElementById("divDropGreen")?.addEventListener("dragover",ev => ev.preventDefault())
-document.getElementById("divDropRed")?.addEventListener("dragover",ev => ev.preventDefault())
-document.getElementById("divDropBlue")?.addEventListener("dragover",ev =>ev.preventDefault())
-document.getElementById("divDropChart")?.addEventListener("dragover",ev =>ev.preventDefault())
+divDropGreen?.addEventListener("dragover",ev => ev.preventDefault())
+divDropRed?.addEventListener("dragover",ev => ev.preventDefault())
+divDropBlue?.addEventListener("dragover",ev =>ev.preventDefault())
+divDropChart?.addEventListener("dragover",ev =>ev.preventDefault())
 
 document.getElementById("inputSliderGreen")?.addEventListener("change",ev =>{
     if(ev.srcElement){
-        greenAudioSource.volume(Number((<HTMLInputElement>ev.srcElement).value))
+        audioManager.setSourceGain(sourceID.AUDIO_G,Number((<HTMLInputElement>ev.srcElement).value))
     }
 })
 
 document.getElementById("inputSliderRed")?.addEventListener("change",ev =>{
     if(ev.srcElement){
-        redAudioSource.volume(Number((<HTMLInputElement>ev.srcElement).value))
+        audioManager.setSourceGain(sourceID.AUDIO_R,Number((<HTMLInputElement>ev.srcElement).value))
     }
 })
 
 document.getElementById("inputSliderBlue")?.addEventListener("change",ev =>{
     if(ev.srcElement){
-        blueAudioSource.volume(Number((<HTMLInputElement>ev.srcElement).value))
+        audioManager.setSourceGain(sourceID.AUDIO_B,Number((<HTMLInputElement>ev.srcElement).value))
+    }
+})
+
+document.getElementById("inputOffsetGreen")?.addEventListener("change",ev =>{
+    if(ev.srcElement){
+        greenOffset = Number((<HTMLInputElement>ev.srcElement).value)
+    }
+})
+
+document.getElementById("inputOffsetRed")?.addEventListener("change",ev =>{
+    if(ev.srcElement){
+        redOffset = Number((<HTMLInputElement>ev.srcElement).value)
+    }
+})
+
+document.getElementById("inputOffsetBlue")?.addEventListener("change",ev =>{
+    if(ev.srcElement){
+        blueOffset = Number((<HTMLInputElement>ev.srcElement).value)
     }
 })
 
@@ -475,17 +477,19 @@ function init() {
 init()
 
 app.ticker.add((delta) => {
-    if (greenAudioSource.playing()) {
-        let time = greenAudioSource.seek()
-        if (typeof time == "number") noteRender.setViewOffset(time / (240 / songBpm))
+    audioManager.tick()
+    if (audioManager.isSourcePlaying(sourceID.AUDIO_G)) {
+        let time = audioManager.getSourceTime(sourceID.AUDIO_G) + greenStartTime
+        noteRender.setViewOffset(time / (240 / songBpm))
         updateGUI()
     } else {
-        greenAudioSource.seek(noteRender.time * (240 / songBpm))
-        redAudioSource.seek(noteRender.time * (240 / songBpm))
-        blueAudioSource.seek(noteRender.time * (240 / songBpm))
+        greenStartTime = noteRender.time * (240 / songBpm)
+        redStartTime = noteRender.time * (240 / songBpm)
+        blueStartTime = noteRender.time * (240 / songBpm)
     }
     noteRender.setTimeScale(timeWarp)
     noteRender.bpmRender(app, notes, songBpm)
+    noteRender.waveForm(app,audioManager.buffers,songBpm,greenOffset,redOffset,blueOffset)
     noteRender.draw(app, notes)
 
     needsRefresh = noteManager.needsRefreshing
@@ -498,17 +502,17 @@ app.ticker.add((delta) => {
 function keyPress(ev: KeyboardEvent) {
     //console.log(ev)
     if ((<HTMLElement>ev.target).tagName === "BODY") {
-        if (ev.key == "Home" && !greenAudioSource.playing()) {
+        if (ev.key == "Home" && !audioManager.isSourcePlaying(sourceID.AUDIO_G)) {
             noteRender.setViewOffset(0)
         } else if (ev.key == " ") {
-            if (greenAudioSource.playing()) {
-                greenAudioSource.stop()
-                redAudioSource.stop()
-                blueAudioSource.stop()
+            if (audioManager.isSourcePlaying(sourceID.AUDIO_G)) {
+                audioManager.stopSource(0)
+                audioManager.stopSource(1)
+                audioManager.stopSource(2)
             } else {
-                greenAudioSource.play()
-                redAudioSource.play()
-                blueAudioSource.play()
+                audioManager.playSource(0,greenStartTime + greenOffset)
+                audioManager.playSource(1,redStartTime + redOffset)
+                audioManager.playSource(2,blueStartTime + blueOffset)
             }
         } else if (ev.key == "-") {
             timeWarp += 0.1
@@ -517,6 +521,7 @@ function keyPress(ev: KeyboardEvent) {
             timeWarp -= timeWarp >= 0.2 ? 0.1 : 0.0
             updateGUI()
         } else if (ev.key == "l") {
+            /*
             let input = document.createElement("input")
             input.setAttribute("webkitdirectory", "true")
             input.type = "file"
@@ -545,6 +550,7 @@ function keyPress(ev: KeyboardEvent) {
                 })
             })
             input.click()
+            */
         } else if (ev.key === "k") {
             NoteExporter.exportToFile(notes)
         } else if (ev.key === "c") {
@@ -657,6 +663,11 @@ function updateGUI() {
     inputNoteTime.value = noteManager.selectedNote.time.toString()
     inputNoteLength.value = noteManager.selectedNote.length.toString()
     inputNoteExtra.value = noteManager.selectedNote.extra.toString()
+
+    //audio offsets
+    inputOffsetGreen.value = greenOffset.toString()
+    inputOffsetRed.value = redOffset.toString()
+    inputOffsetBlue.value = blueOffset.toString()
 }
 
 updateGUI()
@@ -667,6 +678,17 @@ function toBase64(file: File) {
         reader.readAsDataURL(file)
         reader.onload = () => {
             if (reader.result && typeof reader.result === "string") resolve(reader.result)
+        }
+        reader.onerror = (error) => reject(error)
+    })
+}
+
+function toArrayBuffer(file: File) {
+    return new Promise<ArrayBuffer>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.readAsArrayBuffer(file)
+        reader.onload = () => {
+            if (reader.result && reader.result instanceof ArrayBuffer) resolve(reader.result)
         }
         reader.onerror = (error) => reject(error)
     })

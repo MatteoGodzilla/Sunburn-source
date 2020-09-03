@@ -3,13 +3,13 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Sunburn v1.0</title>
+        <title>Sunburn v1.1</title>
     </head>
     <body>
         <link rel="stylesheet" href="./src/style.css" />
         <div id="divMain">
             <div class="topBar">
-                <p>Sunburn Version 1.0</p>
+                <p>Sunburn Version 1.1</p>
             </div>
             <div class="tabView flex">
                 <button class="tabButton selected">Edit</button>
@@ -171,6 +171,7 @@
                                     <label for="inputTickTime">Enable BPM Tick Time</label>
                                 </td>
                             </tr>
+                            
                         </tbody>
                     </table>
                 </div>
@@ -189,6 +190,7 @@
                             <p>Chart<br>File</p>
                         </div>
                         <p>
+                            <br>
                             Drag and drop or click the corresponding zone to load that particular file
                         </p>
                     </div>
@@ -225,6 +227,61 @@
                             </tr>
                         </tbody>
                     </table>
+                    <div class="separator"></div>
+                    <table>
+                        <colgroup>
+                            <col style="width: 33%;" />
+                            <col style="width: auto;" />
+                        </colgroup>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <label for="inputOffsetGreen">Green Offset (seconds):</label>
+                                </td>
+                                <td>
+                                    <input type="number" id="inputOffsetGreen"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <label for="inputOffsetRed">Red Offset (seconds):</label>
+                                </td>
+                                <td>
+                                    <input type="number" id="inputOffsetRed"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <label for="inputOffsetBlue">Green Offset (seconds):</label>
+                                </td>
+                                <td>
+                                    <input type="number" id="inputOffsetBlue" />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>
+                        <br>
+                        Positive offset moves track down, negative offset moves track up <br>
+                        (Enable waveforms to see tracks)
+                    </p>
+                    <div class="separator"></div>
+                    <table>
+                        <colgroup>
+                            <col style="width: 5%;" />
+                            <col style="width: auto;" />
+                        </colgroup>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <input type="checkbox" id="inputWaveform"/>
+                                </td>
+                                <td>
+                                    <label for="inputWaveform">Enable Waveform Display (WARNING: GPU Intensive)</label>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -234,7 +291,7 @@
                 <p>
                     Shortcuts: <br />
                     -/+: Adjust visible time (y zoom)<br />
-                    L: Load chart + audio <br />
+                    L: Load chart + audio (disabled)<br />
                     K: Export chart <br />
                     Space: Start/Stop song <br />
                     Home: Set position to 0 (go back to chart start) <br />

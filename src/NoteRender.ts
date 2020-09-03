@@ -54,9 +54,11 @@ export class NoteRender {
     timeScale = 100
     clickerOffset = 100
     bpmResolution = 1 / 4
-    bpmTickTimeVisible = true
     private crossPosition = 1
     private padding = 10
+
+    renderBPMTicks = true
+    renderWaveform = false
 
     private clickerBaseLeft = new PIXI.Sprite()
     private clickerBaseRight = new PIXI.Sprite()
@@ -67,6 +69,10 @@ export class NoteRender {
     private redGraphic = new PIXI.Graphics()
     private greenGraphic = new PIXI.Graphics()
     private blueGraphic = new PIXI.Graphics()
+
+    private greenWaveform = new PIXI.Graphics()
+    private redWaveform = new PIXI.Graphics()
+    private blueWaveform = new PIXI.Graphics()
 
     private sprites: {
         id: noteTypes
@@ -144,6 +150,10 @@ export class NoteRender {
             this.blueGraphic = new PIXI.Graphics()
             this.blueGraphic.lineStyle(this.lineWidth, Colors.BLUE)
             this.container.addChild(this.blueGraphic)
+
+            this.container.addChild(this.greenWaveform)
+            this.container.addChild(this.redWaveform)
+            this.container.addChild(this.blueWaveform   )
         })
 
         /*
@@ -711,7 +721,7 @@ export class NoteRender {
             g.drawRect(app.renderer.width / 2 - 2 * this.uiScale, y - height / 2, 4 * this.uiScale, height)
             
             this.bpmContainer.addChild(g)
-            if(this.bpmTickTimeVisible){
+            if(this.renderBPMTicks){
                 let text = new PIXI.Text(closestBeat.toFixed(3),textStyle)
                 text.anchor.set(0.5,0.5)
                 text.position.set(app.renderer.width / 2 - 3 * this.uiScale,y)
@@ -719,6 +729,132 @@ export class NoteRender {
             }
             
             t += tickDelta
+        }
+    }
+
+    waveForm(app:PIXI.Application,buffers:AudioBuffer[],bpm:number,gOffset:number,rOffset:number,bOffset:number){
+        this.greenWaveform.clear()
+        this.redWaveform.clear()
+        this.blueWaveform.clear()
+
+        if(this.renderWaveform){
+            let renderHeight = app.renderer.height - this.clickerOffset
+            let lineWidth = 1
+            let alpha = 1
+    
+            //console.log(buffers)
+            if(buffers[0]){
+                
+                this.greenWaveform.moveTo(app.renderer.width / 2 - this.uiScale * 1.5,renderHeight)
+                this.greenWaveform.lineStyle(lineWidth,Colors.WHITE,alpha)
+    
+                const data = buffers[0].getChannelData(0)
+    
+                let startSampleIndex = Math.min((this.time * 240 / bpm + gOffset) * buffers[0].sampleRate,buffers[0].length)
+                let endSampleIndex = Math.min(((this.time + this.timeScale) * 240 / bpm + gOffset) * buffers[0].sampleRate,buffers[0].length)
+
+                let baseX = app.renderer.width / 2 - this.uiScale * 1.5
+
+                let minY = renderHeight
+                let minX = baseX
+                let maxX = baseX
+
+                for(let i = startSampleIndex; i < endSampleIndex; ++i){
+                    let y = renderHeight - Math.floor(((i - startSampleIndex) / (endSampleIndex - startSampleIndex)) * renderHeight)
+                    if(y === minY){
+                        let sample = data[i]
+                        
+                        let x = baseX - sample * this.uiScale
+                        if(x > maxX){
+                            maxX = x
+                            this.greenWaveform.moveTo(baseX,y)
+                            this.greenWaveform.lineTo(x,y)
+                        } else if(x < minX){
+                            this.greenWaveform.moveTo(baseX,y)
+                            this.greenWaveform.lineTo(x,y)
+                            minX = x
+                        }
+                    } else {
+                        minY = y
+                        minX = baseX
+                        maxX = baseX
+                    }
+                }
+            }
+            if(buffers[1]){
+                this.redWaveform.moveTo(app.renderer.width / 2,renderHeight)
+                this.redWaveform.lineStyle(lineWidth,Colors.WHITE,alpha)
+    
+                const data = buffers[1].getChannelData(0)
+    
+                let startSampleIndex = Math.min((this.time * 240 / bpm + rOffset) * buffers[1].sampleRate,buffers[1].length)
+                let endSampleIndex = Math.min(((this.time + this.timeScale) * 240 / bpm + rOffset) * buffers[1].sampleRate,buffers[1].length)
+
+                let baseX = app.renderer.width / 2
+
+                let minY = renderHeight
+                let minX = baseX
+                let maxX = baseX
+
+                for(let i = startSampleIndex; i < endSampleIndex; ++i){
+                    let y = renderHeight - Math.floor(((i - startSampleIndex) / (endSampleIndex - startSampleIndex)) * renderHeight)
+                    if(y === minY){
+                        let sample = data[i]
+                        
+                        let x = baseX - sample * this.uiScale / 2
+                        if(x > maxX){
+                            maxX = x
+                            this.redWaveform.moveTo(baseX,y)
+                            this.redWaveform.lineTo(x,y)
+                        } else if(x < minX){
+                            this.redWaveform.moveTo(baseX,y)
+                            this.redWaveform.lineTo(x,y)
+                            minX = x
+                        }
+                    } else {
+                        minY = y
+                        minX = baseX
+                        maxX = baseX
+                    }
+                }
+            }
+            if(buffers[2]){
+                this.blueWaveform.moveTo(app.renderer.width / 2 + this.uiScale * 1.5,renderHeight)
+                this.blueWaveform.lineStyle(lineWidth,Colors.WHITE,alpha)
+    
+                const data = buffers[2].getChannelData(0)
+    
+                let startSampleIndex = Math.min((this.time * 240 / bpm + bOffset) * buffers[2].sampleRate,buffers[2].length)
+                let endSampleIndex = Math.min(((this.time + this.timeScale) * 240 / bpm + bOffset) * buffers[2].sampleRate,buffers[2].length)
+
+                let baseX = app.renderer.width / 2 + this.uiScale * 1.5
+
+                let minY = renderHeight
+                let minX = baseX
+                let maxX = baseX
+
+                for(let i = startSampleIndex; i < endSampleIndex; ++i){
+                    let y = renderHeight - Math.floor(((i - startSampleIndex) / (endSampleIndex - startSampleIndex)) * renderHeight)
+                    if(y === minY){
+                        let sample = data[i]
+                        
+                        let x = baseX - sample * this.uiScale
+                        if(x > maxX){
+                            maxX = x
+                            this.blueWaveform.moveTo(baseX,y)
+                            this.blueWaveform.lineTo(x,y)
+                        } else if(x < minX){
+                            this.blueWaveform.moveTo(baseX,y)
+                            this.blueWaveform.lineTo(x,y)
+                            minX = x
+                        }
+                    } else {
+                        minY = y
+                        minX = baseX
+                        maxX = baseX
+                    }
+                }
+            }
         }
     }
 
