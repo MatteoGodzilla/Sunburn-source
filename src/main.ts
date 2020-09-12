@@ -1,7 +1,7 @@
 import * as PIXI from "pixi.js"
 import { noteData, getTypeStringName, noteTypes } from "./CustomTypes"
 import { NoteRender } from "./NoteRender"
-import { AudioMan,sourceID } from "./AudioMan"
+import { Howl } from "howler"
 import { NoteLoader } from "./NoteLoader"
 import { NoteExporter } from "./NoteExporter"
 import { NoteManager, NoteClass, Modes } from "./NoteManager"
@@ -12,7 +12,17 @@ let app = new PIXI.Application({
 })
 document.body.appendChild(app.view)
 
-let audioManager = new AudioMan()
+let greenHowl = new Howl({
+    src:[""]
+});
+
+let redHowl = new Howl({
+    src:[""]
+});
+
+let blueHowl = new Howl({
+    src:[""]
+});
 
 let notes: noteData[] = [
     {
@@ -37,10 +47,6 @@ let needsRefresh = false
 
 let timeWarp = 1.5
 let songBpm = 120
-
-let greenStartTime = 0
-let redStartTime = 0
-let blueStartTime = 0
 
 let greenOffset = 0
 let redOffset = 0
@@ -193,15 +199,17 @@ document.getElementById("inputWaveform")?.addEventListener("change",ev =>{
     }
 })
 
-divDropGreen?.addEventListener("click",ev =>{
+divDropGreen?.addEventListener("click",() =>{
     //console.log(ev)
     let input = document.createElement("input")
     input.type = "file"
-    input.addEventListener("change", (ev) => {
+    input.addEventListener("change", () => {
         if(input.files){
             let file = input.files[0]
-            toArrayBuffer(file).then(array => {
-                audioManager.loadFile(array,sourceID.AUDIO_G)
+            toBase64(file).then((s) =>{
+                greenHowl = new Howl({
+                    src:[ s ]
+                })
             })
         }
     })
@@ -210,9 +218,11 @@ divDropGreen?.addEventListener("click",ev =>{
 divDropGreen?.addEventListener("drop",ev =>{
     if(ev.dataTransfer){
         let file = ev.dataTransfer.files[0]
-        toArrayBuffer(file).then(array => {
-            audioManager.loadFile(array,sourceID.AUDIO_G)
-        })
+        toBase64(file).then((s) =>{
+                greenHowl = new Howl({
+                    src:[ s ]
+                })
+            })
     }
     if(ev.srcElement){
         (<HTMLDivElement>ev.srcElement).classList.remove("selected")
@@ -232,15 +242,17 @@ divDropGreen?.addEventListener("dragleave",ev => {
     ev.preventDefault()
 })
 
-divDropRed?.addEventListener("click",ev =>{
+divDropRed?.addEventListener("click",() =>{
     //console.log(ev)
     let input = document.createElement("input")
     input.type = "file"
-    input.addEventListener("change", (ev) => {
+    input.addEventListener("change", () => {
         if(input.files){
             let file = input.files[0]
-            toArrayBuffer(file).then(array => {
-                audioManager.loadFile(array,sourceID.AUDIO_R)
+            toBase64(file).then((s) =>{
+                redHowl = new Howl({
+                    src:[ s ]
+                })
             })
         }
     })
@@ -249,9 +261,11 @@ divDropRed?.addEventListener("click",ev =>{
 divDropRed?.addEventListener("drop",ev =>{
     if(ev.dataTransfer){
         let file = ev.dataTransfer.files[0]
-        toArrayBuffer(file).then(array => {
-            audioManager.loadFile(array,sourceID.AUDIO_R)
-        })
+        toBase64(file).then((s) =>{
+                redHowl = new Howl({
+                    src:[ s ]
+                })
+            })
     }
     if(ev.srcElement){
         (<HTMLDivElement>ev.srcElement).classList.remove("selected")
@@ -271,15 +285,17 @@ divDropRed?.addEventListener("dragleave",ev => {
     ev.preventDefault()
 })
 
-divDropBlue?.addEventListener("click",ev =>{
+divDropBlue?.addEventListener("click",() =>{
     //console.log(ev)
     let input = document.createElement("input")
     input.type = "file"
-    input.addEventListener("change", (ev) => {
+    input.addEventListener("change", () => {
         if(input.files){
             let file = input.files[0]
-            toArrayBuffer(file).then(array => {
-                audioManager.loadFile(array,sourceID.AUDIO_B)
+            toBase64(file).then((s) =>{
+                blueHowl = new Howl({
+                    src:[ s ]
+                })
             })
         }
     })
@@ -288,9 +304,11 @@ divDropBlue?.addEventListener("click",ev =>{
 divDropBlue?.addEventListener("drop",ev =>{
     if(ev.dataTransfer){
         let file = ev.dataTransfer.files[0]
-        toArrayBuffer(file).then(array => {
-            audioManager.loadFile(array,sourceID.AUDIO_B)
-        })
+        toBase64(file).then((s) =>{
+                blueHowl = new Howl({
+                    src:[ s ]
+                })
+            })
     }
     if(ev.srcElement){
         (<HTMLDivElement>ev.srcElement).classList.remove("selected")
@@ -310,11 +328,11 @@ divDropBlue?.addEventListener("dragleave",ev =>{
     ev.preventDefault()
 })
 
-divDropChart?.addEventListener("click",ev =>{
+divDropChart?.addEventListener("click",() =>{
     //console.log(ev)
     let input = document.createElement("input")
     input.type = "file"
-    input.addEventListener("change", (ev) => {
+    input.addEventListener("change", () => {
         if(input.files){
             let file = input.files[0]
             if(file.name.toLowerCase().includes(".xmk")){
@@ -362,19 +380,19 @@ divDropChart?.addEventListener("dragover",ev =>ev.preventDefault())
 
 document.getElementById("inputSliderGreen")?.addEventListener("change",ev =>{
     if(ev.srcElement){
-        audioManager.setSourceGain(sourceID.AUDIO_G,Number((<HTMLInputElement>ev.srcElement).value))
+        greenHowl.volume(Number((<HTMLInputElement>ev.srcElement).value))
     }
 })
 
 document.getElementById("inputSliderRed")?.addEventListener("change",ev =>{
     if(ev.srcElement){
-        audioManager.setSourceGain(sourceID.AUDIO_R,Number((<HTMLInputElement>ev.srcElement).value))
+        redHowl.volume(Number((<HTMLInputElement>ev.srcElement).value))
     }
 })
 
 document.getElementById("inputSliderBlue")?.addEventListener("change",ev =>{
     if(ev.srcElement){
-        audioManager.setSourceGain(sourceID.AUDIO_B,Number((<HTMLInputElement>ev.srcElement).value))
+        blueHowl.volume(Number((<HTMLInputElement>ev.srcElement).value))
     }
 })
 
@@ -448,26 +466,26 @@ function init() {
         }
     }
     for (let i = 0; i < divClassSelector.children.length; ++i) {
-        divClassSelector.children[i].addEventListener("click", (ev) => {
+        divClassSelector.children[i].addEventListener("click", () => {
             noteManager.setNoteClass(i)
             updateGUI()
         })
         divClassSelector.children[i].addEventListener("dragstart", (ev) => ev.preventDefault())
     }
 
-    divModes.children[0].addEventListener("click", (ev) => {
+    divModes.children[0].addEventListener("click", () => {
         noteManager.setMode(Modes.add)
         updateGUI()
     })
     divModes.children[0].addEventListener("dragstart", (ev) => ev.preventDefault())
 
-    divModes.children[1].addEventListener("click", (ev) => {
+    divModes.children[1].addEventListener("click", () => {
         noteManager.setMode(Modes.select)
         updateGUI()
     })
     divModes.children[1].addEventListener("dragstart", (ev) => ev.preventDefault())
 
-    divModes.children[2].addEventListener("click", (ev) => {
+    divModes.children[2].addEventListener("click", () => {
         noteManager.setMode(Modes.delete)
         updateGUI()
     })
@@ -476,20 +494,17 @@ function init() {
 
 init()
 
-app.ticker.add((delta) => {
-    audioManager.tick()
-    if (audioManager.isSourcePlaying(sourceID.AUDIO_G)) {
-        let time = audioManager.getSourceTime(sourceID.AUDIO_G) + greenStartTime
-        noteRender.setViewOffset(time / (240 / songBpm))
-        updateGUI()
+app.ticker.add(() => {
+    if(greenHowl.playing()){
+        let time = greenHowl.seek()
+        if(typeof time === "number") noteRender.setViewOffset(time / (240 / songBpm))
     } else {
-        greenStartTime = noteRender.time * (240 / songBpm)
-        redStartTime = noteRender.time * (240 / songBpm)
-        blueStartTime = noteRender.time * (240 / songBpm)
+        greenHowl.seek(noteRender.time * (240 / songBpm) + greenOffset)
+        redHowl.seek(noteRender.time * (240 / songBpm) + redOffset)
+        blueHowl.seek(noteRender.time * (240 / songBpm) + blueOffset)
     }
     noteRender.setTimeScale(timeWarp)
     noteRender.bpmRender(app, notes, songBpm)
-    noteRender.waveForm(app,audioManager.buffers,songBpm,greenOffset,redOffset,blueOffset)
     noteRender.draw(app, notes)
 
     needsRefresh = noteManager.needsRefreshing
@@ -502,17 +517,17 @@ app.ticker.add((delta) => {
 function keyPress(ev: KeyboardEvent) {
     //console.log(ev)
     if ((<HTMLElement>ev.target).tagName === "BODY") {
-        if (ev.key == "Home" && !audioManager.isSourcePlaying(sourceID.AUDIO_G)) {
+        if (ev.key == "Home") {
             noteRender.setViewOffset(0)
         } else if (ev.key == " ") {
-            if (audioManager.isSourcePlaying(sourceID.AUDIO_G)) {
-                audioManager.stopSource(0)
-                audioManager.stopSource(1)
-                audioManager.stopSource(2)
+            if(greenHowl.playing() || redHowl.playing() || blueHowl.playing()){
+                greenHowl.stop()
+                redHowl.stop()
+                blueHowl.stop()
             } else {
-                audioManager.playSource(0,greenStartTime + greenOffset)
-                audioManager.playSource(1,redStartTime + redOffset)
-                audioManager.playSource(2,blueStartTime + blueOffset)
+                greenHowl.play()
+                redHowl.play()
+                blueHowl.play()
             }
         } else if (ev.key == "-") {
             timeWarp += 0.1
@@ -665,6 +680,10 @@ function updateGUI() {
     inputNoteExtra.value = noteManager.selectedNote.extra.toString()
 
     //audio offsets
+    greenOffset = Math.min(greenOffset,0)
+    redOffset = Math.min(redOffset,0)
+    blueOffset = Math.min(blueOffset,0)
+
     inputOffsetGreen.value = greenOffset.toString()
     inputOffsetRed.value = redOffset.toString()
     inputOffsetBlue.value = blueOffset.toString()
@@ -683,6 +702,7 @@ function toBase64(file: File) {
     })
 }
 
+/*
 function toArrayBuffer(file: File) {
     return new Promise<ArrayBuffer>((resolve, reject) => {
         const reader = new FileReader()
@@ -693,3 +713,4 @@ function toArrayBuffer(file: File) {
         reader.onerror = (error) => reject(error)
     })
 }
+*/

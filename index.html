@@ -239,7 +239,7 @@
                                     <label for="inputOffsetGreen">Green Offset (seconds):</label>
                                 </td>
                                 <td>
-                                    <input type="number" id="inputOffsetGreen"/>
+                                    <input type="number" id="inputOffsetGreen" min=0 step=any/>
                                 </td>
                             </tr>
                             <tr>
@@ -247,7 +247,7 @@
                                     <label for="inputOffsetRed">Red Offset (seconds):</label>
                                 </td>
                                 <td>
-                                    <input type="number" id="inputOffsetRed"/>
+                                    <input type="number" id="inputOffsetRed" min=0 step=any/>
                                 </td>
                             </tr>
                             <tr>
@@ -255,16 +255,17 @@
                                     <label for="inputOffsetBlue">Green Offset (seconds):</label>
                                 </td>
                                 <td>
-                                    <input type="number" id="inputOffsetBlue" />
+                                    <input type="number" id="inputOffsetBlue" min=0 step=any/>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                     <p>
                         <br>
-                        Positive offset moves track down, negative offset moves track up <br>
-                        (Enable waveforms to see tracks)
+                        Offset moves the start of the audio playback when pressing space <br>
+                        Negative offsets are not supported
                     </p>
+                    <!--
                     <div class="separator"></div>
                     <table>
                         <colgroup>
@@ -282,6 +283,7 @@
                             </tr>
                         </tbody>
                     </table>
+                    -->
                 </div>
             </div>
         </div>

@@ -17,9 +17,11 @@
     "@types/file-saver": "^2.0.1",
     "@types/howler": "^2.2.1",
     "@types/pixi.js": "^5.0.0",
+    "parcel": "^1.12.4",
     "parcel-plugin-static-files-copy": "^2.5.0",
     "prettier": "2.0.5",
-    "typescript": "^3.9.5"
+    "typescript": "^3.9.5",
+    "yarn": "^1.22.5"
   },
   "dependencies": {
     "file-saver": "^2.0.2",
