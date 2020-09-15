@@ -53,95 +53,56 @@ export interface noteData {
     selected?: boolean
 }
 
+const typeToString: Record<noteTypes, string> = {
+    [noteTypes.TAP_G]: "Green Tap",
+    [noteTypes.TAP_B]: "Blue Tap",
+    [noteTypes.TAP_R]: "Red Tap",
+    [noteTypes.SCR_G_UP]: "Scratch Green Up",
+    [noteTypes.SCR_B_UP]: "Scratch Blue Up",
+    [noteTypes.SCR_G_DOWN]: "Scratch Green Down",
+    [noteTypes.SCR_B_DOWN]: "Scratch Blue Down",
+    [noteTypes.SCR_G_ANYDIR]: "Scratch Green Anydir",
+    [noteTypes.SCR_B_ANYDIR]: "Scratch Blue Anydir",
+    [noteTypes.CROSS_B]: "Crossfade Blue",
+    [noteTypes.CROSS_C]: "Crossfade Center",
+    [noteTypes.CROSS_G]: "Crossfade Green",
+    [noteTypes.FX_G]: "Effects Green",
+    [noteTypes.FX_B]: "Effects Blue",
+    [noteTypes.FX_R]: "Effects Red",
+    [noteTypes.EUPHORIA]: "Euphoria",
+    [noteTypes.FS_SAMPLES]: "Freestyle Samples",
+    [noteTypes.FS_CROSS]: "Freestyle Crossfade",
+    [noteTypes.SCR_G_ZONE]: "Scratch Zone Green",
+    [noteTypes.SCR_B_ZONE]: "Scratch Zone Blue",
+    [noteTypes.FX_ALL]: "Effects All",
+    [noteTypes.CROSS_FORCE_CENTER]: "Crossfade Force Center",
+    [noteTypes.BATTLE_MARKER]: "DJ Battle Marker",
+    [noteTypes.CF_SPIKE_G]: "Crossfade Spike Green",
+    [noteTypes.CF_SPIKE_B]: "Crossfade Spike Blue",
+    [noteTypes.CF_SPIKE_C]: "Crossfade Spike Center",
+    [noteTypes.MEGAMIX_TRANSITION]: "Megamix Marker",
+    [noteTypes.FS_CF_G_MARKER]: "Freestyle Crossfade Green Marker",
+    [noteTypes.FS_CF_B_MARKER]: "Freestyle Crossfade Blue Marker",
+    [noteTypes.FX_FILTER]: "Effects Filter type",
+    [noteTypes.FX_BEATROLL]: "Effects Beatroll type",
+    [noteTypes.FX_BITREDUCTION]: "Effects Bit Reduction type",
+    [noteTypes.FX_WAHWAH]: "Effects Wah Wah type",
+    [noteTypes.FX_RINGMOD]: "Effects Ringmod type",
+    [noteTypes.FX_STUTTER]: "Effects Stutter type",
+    [noteTypes.FX_FLANGER]: "Effects Flanger type",
+    [noteTypes.FX_ROBOT]: "Effects Robot type",
+    [noteTypes.FX_BEATROLLAUTO]: "Effects Beatroll Auto-advance type",
+    [noteTypes.FX_DELAY]: "Effects Delay type",
+    [noteTypes.STRING]: "String Data",
+    [noteTypes.BPM_FAKE]: "Bpm Change",
+    [noteTypes.BPM]: "Base BPM",
+    [noteTypes.REWIND]: "Rewind Marker"
+}
+
 export function getTypeStringName(type: noteTypes) {
-    switch (type) {
-        case noteTypes.TAP_G:
-            return "Green Tap"
-        case noteTypes.TAP_B:
-            return "Blue Tap"
-        case noteTypes.TAP_R:
-            return "Red Tap"
-        case noteTypes.SCR_G_UP:
-            return "Scratch Green Up"
-        case noteTypes.SCR_B_UP:
-            return "Scratch Blue Up"
-        case noteTypes.SCR_G_DOWN:
-            return "Scratch Green Down"
-        case noteTypes.SCR_B_DOWN:
-            return "Scratch Blue Down"
-        case noteTypes.SCR_G_ANYDIR:
-            return "Scratch Green Anydir"
-        case noteTypes.SCR_B_ANYDIR:
-            return "Scratch Blue Anydir"
-        case noteTypes.CROSS_B:
-            return "Crossfade Blue"
-        case noteTypes.CROSS_C:
-            return "Crossfade Center"
-        case noteTypes.CROSS_G:
-            return "Crossfade Green"
-        case noteTypes.FX_G:
-            return "Effects Green"
-        case noteTypes.FX_B:
-            return "Effects Blue"
-        case noteTypes.FX_R:
-            return "Effects Red"
-        case noteTypes.EUPHORIA:
-            return "Euphoria"
-        case noteTypes.FS_SAMPLES:
-            return "Freestyle Samples"
-        case noteTypes.FS_CROSS:
-            return "Freestyle Crossfade"
-        case noteTypes.SCR_G_ZONE:
-            return "Scratch Zone Green"
-        case noteTypes.SCR_B_ZONE:
-            return "Scratch Zone Blue"
-        case noteTypes.FX_ALL:
-            return "Effects All"
-        case noteTypes.CROSS_FORCE_CENTER:
-            return "Crossfade Force Center"
-        case noteTypes.BATTLE_MARKER:
-            return "DJ Battle Marker"
-        case noteTypes.CF_SPIKE_G:
-            return "Crossfade Spike Green"
-        case noteTypes.CF_SPIKE_B:
-            return "Crossfade Spike Blue"
-        case noteTypes.CF_SPIKE_C:
-            return "Crossfade Spike Center"
-        case noteTypes.MEGAMIX_TRANSITION:
-            return "Megamix Marker"
-        case noteTypes.FS_CF_G_MARKER:
-            return "Freestyle Crossfade Green Marker"
-        case noteTypes.FS_CF_B_MARKER:
-            return "Freestyle Crossfade Blue Marker"
-        case noteTypes.FX_FILTER:
-            return "Effects Filter type"
-        case noteTypes.FX_BEATROLL:
-            return "Effects Beatroll type"
-        case noteTypes.FX_BITREDUCTION:
-            return "Effects Bit Reduction type"
-        case noteTypes.FX_WAHWAH:
-            return "Effects Wah Wah type"
-        case noteTypes.FX_RINGMOD:
-            return "Effects Ringmod type"
-        case noteTypes.FX_STUTTER:
-            return "Effects Stutter type"
-        case noteTypes.FX_FLANGER:
-            return "Effects Flanger type"
-        case noteTypes.FX_ROBOT:
-            return "Effects Robot type"
-        case noteTypes.FX_BEATROLLAUTO:
-            return "Effects Beatroll Auto-advance type"
-        case noteTypes.FX_DELAY:
-            return "Effects Delay type"
-        case noteTypes.STRING:
-            return "String Data"
-        case noteTypes.BPM_FAKE:
-            return "Bpm Change"
-        case noteTypes.BPM:
-            return "Base BPM"
-        case noteTypes.REWIND:
-            return "Rewind Marker"
-        default:
-            return "Unknown ID"
+    let ids = []
+    for (let elm in noteTypes) {
+        ids.push(elm)
     }
+    return ids.includes(type.toString()) ? typeToString[type] : "Unknown ID"
 }

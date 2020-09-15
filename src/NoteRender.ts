@@ -58,7 +58,7 @@ export class NoteRender {
     private padding = 10
 
     renderBPMTicks = true
-    renderWaveform = false
+    //renderWaveform = false
 
     private clickerBaseLeft = new PIXI.Sprite()
     private clickerBaseRight = new PIXI.Sprite()
@@ -70,9 +70,11 @@ export class NoteRender {
     private greenGraphic = new PIXI.Graphics()
     private blueGraphic = new PIXI.Graphics()
 
+    /*
     private greenWaveform = new PIXI.Graphics()
     private redWaveform = new PIXI.Graphics()
     private blueWaveform = new PIXI.Graphics()
+    */
 
     private sprites: {
         id: noteTypes
@@ -151,9 +153,9 @@ export class NoteRender {
             this.blueGraphic.lineStyle(this.lineWidth, Colors.BLUE)
             this.container.addChild(this.blueGraphic)
 
-            this.container.addChild(this.greenWaveform)
-            this.container.addChild(this.redWaveform)
-            this.container.addChild(this.blueWaveform   )
+            //this.container.addChild(this.greenWaveform)
+            //this.container.addChild(this.redWaveform)
+            //this.container.addChild(this.blueWaveform)
         })
 
         /*
@@ -683,8 +685,8 @@ export class NoteRender {
         }
     }
 
-    getNearestBPMBeat(time:number,notes:noteData[],baseBPM:number){
-        if(time >= 0){
+    getNearestBPMBeat(time: number, notes: noteData[], baseBPM: number) {
+        if (time >= 0) {
             let lastBPMChange: noteData = { time: 0, type: 0, length: 0, lane: 0, extra: 0 }
             for (let n of notes) {
                 if ((n.type === noteTypes.BPM || n.type === noteTypes.BPM_FAKE) && n.time <= time) lastBPMChange = n
@@ -697,10 +699,10 @@ export class NoteRender {
     }
 
     bpmRender(app: PIXI.Application, notes: noteData[], baseBPM: number) {
-        for(let c of this.bpmContainer.children){
-            if(c instanceof PIXI.Graphics) c.destroy()
+        for (let c of this.bpmContainer.children) {
+            if (c instanceof PIXI.Graphics) c.destroy()
         }
-        
+
         this.bpmContainer.removeChildren()
         let renderHeight = app.renderer.height - this.clickerOffset
         let height = 20
@@ -719,39 +721,39 @@ export class NoteRender {
             let g = new PIXI.Graphics()
             g.beginFill(Colors.GRAY)
             g.drawRect(app.renderer.width / 2 - 2 * this.uiScale, y - height / 2, 4 * this.uiScale, height)
-            
+
             this.bpmContainer.addChild(g)
-            if(this.renderBPMTicks){
-                let text = new PIXI.Text(closestBeat.toFixed(3),textStyle)
-                text.anchor.set(0.5,0.5)
-                text.position.set(app.renderer.width / 2 - 3 * this.uiScale,y)
+            if (this.renderBPMTicks) {
+                let text = new PIXI.Text(closestBeat.toFixed(3), textStyle)
+                text.anchor.set(0.5, 0.5)
+                text.position.set(app.renderer.width / 2 - 3 * this.uiScale, y)
                 this.bpmContainer.addChild(text)
             }
-            
+
             t += tickDelta
         }
     }
 
-    waveForm(app:PIXI.Application,buffers:AudioBuffer[],bpm:number,gOffset:number,rOffset:number,bOffset:number){
+    /*
+    waveForm(app: PIXI.Application, buffers: AudioBuffer[], bpm: number, gOffset: number, rOffset: number, bOffset: number) {
         this.greenWaveform.clear()
         this.redWaveform.clear()
         this.blueWaveform.clear()
 
-        if(this.renderWaveform){
+        if (this.renderWaveform) {
             let renderHeight = app.renderer.height - this.clickerOffset
             let lineWidth = 1
             let alpha = 1
-    
+
             //console.log(buffers)
-            if(buffers[0]){
-                
-                this.greenWaveform.moveTo(app.renderer.width / 2 - this.uiScale * 1.5,renderHeight)
-                this.greenWaveform.lineStyle(lineWidth,Colors.WHITE,alpha)
-    
+            if (buffers[0]) {
+                this.greenWaveform.moveTo(app.renderer.width / 2 - this.uiScale * 1.5, renderHeight)
+                this.greenWaveform.lineStyle(lineWidth, Colors.WHITE, alpha)
+
                 const data = buffers[0].getChannelData(0)
-    
-                let startSampleIndex = Math.min((this.time * 240 / bpm + gOffset) * buffers[0].sampleRate,buffers[0].length)
-                let endSampleIndex = Math.min(((this.time + this.timeScale) * 240 / bpm + gOffset) * buffers[0].sampleRate,buffers[0].length)
+
+                let startSampleIndex = Math.min(((this.time * 240) / bpm + gOffset) * buffers[0].sampleRate, buffers[0].length)
+                let endSampleIndex = Math.min((((this.time + this.timeScale) * 240) / bpm + gOffset) * buffers[0].sampleRate, buffers[0].length)
 
                 let baseX = app.renderer.width / 2 - this.uiScale * 1.5
 
@@ -759,19 +761,19 @@ export class NoteRender {
                 let minX = baseX
                 let maxX = baseX
 
-                for(let i = startSampleIndex; i < endSampleIndex; ++i){
+                for (let i = startSampleIndex; i < endSampleIndex; ++i) {
                     let y = renderHeight - Math.floor(((i - startSampleIndex) / (endSampleIndex - startSampleIndex)) * renderHeight)
-                    if(y === minY){
+                    if (y === minY) {
                         let sample = data[i]
-                        
+
                         let x = baseX - sample * this.uiScale
-                        if(x > maxX){
+                        if (x > maxX) {
                             maxX = x
-                            this.greenWaveform.moveTo(baseX,y)
-                            this.greenWaveform.lineTo(x,y)
-                        } else if(x < minX){
-                            this.greenWaveform.moveTo(baseX,y)
-                            this.greenWaveform.lineTo(x,y)
+                            this.greenWaveform.moveTo(baseX, y)
+                            this.greenWaveform.lineTo(x, y)
+                        } else if (x < minX) {
+                            this.greenWaveform.moveTo(baseX, y)
+                            this.greenWaveform.lineTo(x, y)
                             minX = x
                         }
                     } else {
@@ -781,14 +783,14 @@ export class NoteRender {
                     }
                 }
             }
-            if(buffers[1]){
-                this.redWaveform.moveTo(app.renderer.width / 2,renderHeight)
-                this.redWaveform.lineStyle(lineWidth,Colors.WHITE,alpha)
-    
+            if (buffers[1]) {
+                this.redWaveform.moveTo(app.renderer.width / 2, renderHeight)
+                this.redWaveform.lineStyle(lineWidth, Colors.WHITE, alpha)
+
                 const data = buffers[1].getChannelData(0)
-    
-                let startSampleIndex = Math.min((this.time * 240 / bpm + rOffset) * buffers[1].sampleRate,buffers[1].length)
-                let endSampleIndex = Math.min(((this.time + this.timeScale) * 240 / bpm + rOffset) * buffers[1].sampleRate,buffers[1].length)
+
+                let startSampleIndex = Math.min(((this.time * 240) / bpm + rOffset) * buffers[1].sampleRate, buffers[1].length)
+                let endSampleIndex = Math.min((((this.time + this.timeScale) * 240) / bpm + rOffset) * buffers[1].sampleRate, buffers[1].length)
 
                 let baseX = app.renderer.width / 2
 
@@ -796,19 +798,19 @@ export class NoteRender {
                 let minX = baseX
                 let maxX = baseX
 
-                for(let i = startSampleIndex; i < endSampleIndex; ++i){
+                for (let i = startSampleIndex; i < endSampleIndex; ++i) {
                     let y = renderHeight - Math.floor(((i - startSampleIndex) / (endSampleIndex - startSampleIndex)) * renderHeight)
-                    if(y === minY){
+                    if (y === minY) {
                         let sample = data[i]
-                        
-                        let x = baseX - sample * this.uiScale / 2
-                        if(x > maxX){
+
+                        let x = baseX - (sample * this.uiScale) / 2
+                        if (x > maxX) {
                             maxX = x
-                            this.redWaveform.moveTo(baseX,y)
-                            this.redWaveform.lineTo(x,y)
-                        } else if(x < minX){
-                            this.redWaveform.moveTo(baseX,y)
-                            this.redWaveform.lineTo(x,y)
+                            this.redWaveform.moveTo(baseX, y)
+                            this.redWaveform.lineTo(x, y)
+                        } else if (x < minX) {
+                            this.redWaveform.moveTo(baseX, y)
+                            this.redWaveform.lineTo(x, y)
                             minX = x
                         }
                     } else {
@@ -818,14 +820,14 @@ export class NoteRender {
                     }
                 }
             }
-            if(buffers[2]){
-                this.blueWaveform.moveTo(app.renderer.width / 2 + this.uiScale * 1.5,renderHeight)
-                this.blueWaveform.lineStyle(lineWidth,Colors.WHITE,alpha)
-    
+            if (buffers[2]) {
+                this.blueWaveform.moveTo(app.renderer.width / 2 + this.uiScale * 1.5, renderHeight)
+                this.blueWaveform.lineStyle(lineWidth, Colors.WHITE, alpha)
+
                 const data = buffers[2].getChannelData(0)
-    
-                let startSampleIndex = Math.min((this.time * 240 / bpm + bOffset) * buffers[2].sampleRate,buffers[2].length)
-                let endSampleIndex = Math.min(((this.time + this.timeScale) * 240 / bpm + bOffset) * buffers[2].sampleRate,buffers[2].length)
+
+                let startSampleIndex = Math.min(((this.time * 240) / bpm + bOffset) * buffers[2].sampleRate, buffers[2].length)
+                let endSampleIndex = Math.min((((this.time + this.timeScale) * 240) / bpm + bOffset) * buffers[2].sampleRate, buffers[2].length)
 
                 let baseX = app.renderer.width / 2 + this.uiScale * 1.5
 
@@ -833,19 +835,19 @@ export class NoteRender {
                 let minX = baseX
                 let maxX = baseX
 
-                for(let i = startSampleIndex; i < endSampleIndex; ++i){
+                for (let i = startSampleIndex; i < endSampleIndex; ++i) {
                     let y = renderHeight - Math.floor(((i - startSampleIndex) / (endSampleIndex - startSampleIndex)) * renderHeight)
-                    if(y === minY){
+                    if (y === minY) {
                         let sample = data[i]
-                        
+
                         let x = baseX - sample * this.uiScale
-                        if(x > maxX){
+                        if (x > maxX) {
                             maxX = x
-                            this.blueWaveform.moveTo(baseX,y)
-                            this.blueWaveform.lineTo(x,y)
-                        } else if(x < minX){
-                            this.blueWaveform.moveTo(baseX,y)
-                            this.blueWaveform.lineTo(x,y)
+                            this.blueWaveform.moveTo(baseX, y)
+                            this.blueWaveform.lineTo(x, y)
+                        } else if (x < minX) {
+                            this.blueWaveform.moveTo(baseX, y)
+                            this.blueWaveform.lineTo(x, y)
                             minX = x
                         }
                     } else {
@@ -857,16 +859,17 @@ export class NoteRender {
             }
         }
     }
+    */
 
-    moveView(delta: number,notes:noteData[],baseBPM:number) {
-        this.time = this.getNearestBPMBeat(this.time,notes,baseBPM)
+    moveView(delta: number, notes: noteData[], baseBPM: number) {
+        this.time = this.getNearestBPMBeat(this.time, notes, baseBPM)
         let lastBPMChange: noteData = { time: 0, type: 0, length: 0, lane: 0, extra: 0 }
         for (let n of notes) {
             if ((n.type === noteTypes.BPM || n.type === noteTypes.BPM_FAKE) && n.time <= this.time) lastBPMChange = n
         }
         let tickDelta = (this.bpmResolution * baseBPM) / lastBPMChange.extra
 
-        this.time += (delta >= 0 ? tickDelta : -tickDelta)
+        this.time += delta >= 0 ? tickDelta : -tickDelta
 
         //this.time += (delta >= 0 ? this.timeScale : -this.timeScale) / 5
         if (this.time < 0) this.time = 0

@@ -13,16 +13,16 @@ let app = new PIXI.Application({
 document.body.appendChild(app.view)
 
 let greenHowl = new Howl({
-    src:[""]
-});
+    src: [""]
+})
 
 let redHowl = new Howl({
-    src:[""]
-});
+    src: [""]
+})
 
 let blueHowl = new Howl({
-    src:[""]
-});
+    src: [""]
+})
 
 let notes: noteData[] = [
     {
@@ -181,161 +181,161 @@ inputNoteExtra?.addEventListener("change", (ev) => {
     if (ev.srcElement) noteManager.selectedNote.extra = Number((<HTMLInputElement>ev.srcElement).value)
 })
 
-document.getElementById("inputShortcutsToggle")?.addEventListener("change",ev =>{
-    if(ev.srcElement && divTooltip) {
+document.getElementById("inputShortcutsToggle")?.addEventListener("change", (ev) => {
+    if (ev.srcElement && divTooltip) {
         divTooltip.style.display = (<HTMLInputElement>ev.srcElement).checked ? "block" : "none"
     }
 })
 
-document.getElementById("inputTickTime")?.addEventListener("change",ev =>{
-    if(ev.srcElement && noteRender) {
+document.getElementById("inputTickTime")?.addEventListener("change", (ev) => {
+    if (ev.srcElement && noteRender) {
         noteRender.renderBPMTicks = (<HTMLInputElement>ev.srcElement).checked
     }
 })
 
-document.getElementById("inputWaveform")?.addEventListener("change",ev =>{
-    if(ev.srcElement && noteRender) {
+document.getElementById("inputWaveform")?.addEventListener("change", (ev) => {
+    if (ev.srcElement && noteRender) {
         noteRender.renderWaveform = (<HTMLInputElement>ev.srcElement).checked
     }
 })
 
-divDropGreen?.addEventListener("click",() =>{
+divDropGreen?.addEventListener("click", () => {
     //console.log(ev)
     let input = document.createElement("input")
     input.type = "file"
     input.addEventListener("change", () => {
-        if(input.files){
+        if (input.files) {
             let file = input.files[0]
-            toBase64(file).then((s) =>{
+            toBase64(file).then((s) => {
                 greenHowl = new Howl({
-                    src:[ s ]
+                    src: [s]
                 })
             })
         }
     })
     input.click()
 })
-divDropGreen?.addEventListener("drop",ev =>{
-    if(ev.dataTransfer){
+divDropGreen?.addEventListener("drop", (ev) => {
+    if (ev.dataTransfer) {
         let file = ev.dataTransfer.files[0]
-        toBase64(file).then((s) =>{
-                greenHowl = new Howl({
-                    src:[ s ]
-                })
+        toBase64(file).then((s) => {
+            greenHowl = new Howl({
+                src: [s]
             })
+        })
     }
-    if(ev.srcElement){
-        (<HTMLDivElement>ev.srcElement).classList.remove("selected")
-    }
-    ev.preventDefault()
-})
-divDropGreen?.addEventListener("dragenter",ev => {
-    if(ev.srcElement){
-        (<HTMLDivElement>ev.srcElement).classList.add("selected")
+    if (ev.srcElement) {
+        ;(<HTMLDivElement>ev.srcElement).classList.remove("selected")
     }
     ev.preventDefault()
 })
-divDropGreen?.addEventListener("dragleave",ev => {
-    if(ev.target){
-        (<HTMLDivElement>ev.srcElement).classList.remove("selected")
+divDropGreen?.addEventListener("dragenter", (ev) => {
+    if (ev.srcElement) {
+        ;(<HTMLDivElement>ev.srcElement).classList.add("selected")
+    }
+    ev.preventDefault()
+})
+divDropGreen?.addEventListener("dragleave", (ev) => {
+    if (ev.target) {
+        ;(<HTMLDivElement>ev.srcElement).classList.remove("selected")
     }
     ev.preventDefault()
 })
 
-divDropRed?.addEventListener("click",() =>{
+divDropRed?.addEventListener("click", () => {
     //console.log(ev)
     let input = document.createElement("input")
     input.type = "file"
     input.addEventListener("change", () => {
-        if(input.files){
+        if (input.files) {
             let file = input.files[0]
-            toBase64(file).then((s) =>{
+            toBase64(file).then((s) => {
                 redHowl = new Howl({
-                    src:[ s ]
+                    src: [s]
                 })
             })
         }
     })
     input.click()
 })
-divDropRed?.addEventListener("drop",ev =>{
-    if(ev.dataTransfer){
+divDropRed?.addEventListener("drop", (ev) => {
+    if (ev.dataTransfer) {
         let file = ev.dataTransfer.files[0]
-        toBase64(file).then((s) =>{
-                redHowl = new Howl({
-                    src:[ s ]
-                })
+        toBase64(file).then((s) => {
+            redHowl = new Howl({
+                src: [s]
             })
+        })
     }
-    if(ev.srcElement){
-        (<HTMLDivElement>ev.srcElement).classList.remove("selected")
-    }
-    ev.preventDefault()
-})
-divDropRed?.addEventListener("dragenter",ev => {
-    if(ev.srcElement){
-        (<HTMLDivElement>ev.srcElement).classList.add("selected")
+    if (ev.srcElement) {
+        ;(<HTMLDivElement>ev.srcElement).classList.remove("selected")
     }
     ev.preventDefault()
 })
-divDropRed?.addEventListener("dragleave",ev => {
-    if(ev.target){
-        (<HTMLDivElement>ev.srcElement).classList.remove("selected")
+divDropRed?.addEventListener("dragenter", (ev) => {
+    if (ev.srcElement) {
+        ;(<HTMLDivElement>ev.srcElement).classList.add("selected")
+    }
+    ev.preventDefault()
+})
+divDropRed?.addEventListener("dragleave", (ev) => {
+    if (ev.target) {
+        ;(<HTMLDivElement>ev.srcElement).classList.remove("selected")
     }
     ev.preventDefault()
 })
 
-divDropBlue?.addEventListener("click",() =>{
+divDropBlue?.addEventListener("click", () => {
     //console.log(ev)
     let input = document.createElement("input")
     input.type = "file"
     input.addEventListener("change", () => {
-        if(input.files){
+        if (input.files) {
             let file = input.files[0]
-            toBase64(file).then((s) =>{
+            toBase64(file).then((s) => {
                 blueHowl = new Howl({
-                    src:[ s ]
+                    src: [s]
                 })
             })
         }
     })
     input.click()
 })
-divDropBlue?.addEventListener("drop",ev =>{
-    if(ev.dataTransfer){
+divDropBlue?.addEventListener("drop", (ev) => {
+    if (ev.dataTransfer) {
         let file = ev.dataTransfer.files[0]
-        toBase64(file).then((s) =>{
-                blueHowl = new Howl({
-                    src:[ s ]
-                })
+        toBase64(file).then((s) => {
+            blueHowl = new Howl({
+                src: [s]
             })
+        })
     }
-    if(ev.srcElement){
-        (<HTMLDivElement>ev.srcElement).classList.remove("selected")
-    }
-    ev.preventDefault()
-})
-divDropBlue?.addEventListener("dragenter",ev =>{
-    if(ev.srcElement){
-        (<HTMLDivElement>ev.srcElement).classList.add("selected")
+    if (ev.srcElement) {
+        ;(<HTMLDivElement>ev.srcElement).classList.remove("selected")
     }
     ev.preventDefault()
 })
-divDropBlue?.addEventListener("dragleave",ev =>{
-    if(ev.target){
-        (<HTMLDivElement>ev.srcElement).classList.remove("selected")
+divDropBlue?.addEventListener("dragenter", (ev) => {
+    if (ev.srcElement) {
+        ;(<HTMLDivElement>ev.srcElement).classList.add("selected")
+    }
+    ev.preventDefault()
+})
+divDropBlue?.addEventListener("dragleave", (ev) => {
+    if (ev.target) {
+        ;(<HTMLDivElement>ev.srcElement).classList.remove("selected")
     }
     ev.preventDefault()
 })
 
-divDropChart?.addEventListener("click",() =>{
+divDropChart?.addEventListener("click", () => {
     //console.log(ev)
     let input = document.createElement("input")
     input.type = "file"
     input.addEventListener("change", () => {
-        if(input.files){
+        if (input.files) {
             let file = input.files[0]
-            if(file.name.toLowerCase().includes(".xmk")){
+            if (file.name.toLowerCase().includes(".xmk")) {
                 NoteLoader.parseChart(file, notes).then((bpm) => {
                     songBpm = bpm ? bpm : 120
                     updateGUI()
@@ -345,71 +345,71 @@ divDropChart?.addEventListener("click",() =>{
     })
     input.click()
 })
-divDropChart?.addEventListener("drop",ev =>{
-    if(ev.dataTransfer){
+divDropChart?.addEventListener("drop", (ev) => {
+    if (ev.dataTransfer) {
         let file = ev.dataTransfer.files[0]
-        if(file.name.toLowerCase().includes(".xmk")){
+        if (file.name.toLowerCase().includes(".xmk")) {
             NoteLoader.parseChart(file, notes).then((bpm) => {
                 songBpm = bpm ? bpm : 120
                 updateGUI()
             })
         }
     }
-    if(ev.srcElement){
-        (<HTMLDivElement>ev.srcElement).classList.remove("selected")
+    if (ev.srcElement) {
+        ;(<HTMLDivElement>ev.srcElement).classList.remove("selected")
     }
     ev.preventDefault()
 })
-divDropChart?.addEventListener("dragenter",ev =>{
-    if(ev.srcElement){
-        (<HTMLDivElement>ev.srcElement).classList.add("selected")
+divDropChart?.addEventListener("dragenter", (ev) => {
+    if (ev.srcElement) {
+        ;(<HTMLDivElement>ev.srcElement).classList.add("selected")
     }
     ev.preventDefault()
 })
-divDropChart?.addEventListener("dragleave",ev =>{
-    if(ev.target){
-        (<HTMLDivElement>ev.srcElement).classList.remove("selected")
+divDropChart?.addEventListener("dragleave", (ev) => {
+    if (ev.target) {
+        ;(<HTMLDivElement>ev.srcElement).classList.remove("selected")
     }
     ev.preventDefault()
 })
 
-divDropGreen?.addEventListener("dragover",ev => ev.preventDefault())
-divDropRed?.addEventListener("dragover",ev => ev.preventDefault())
-divDropBlue?.addEventListener("dragover",ev =>ev.preventDefault())
-divDropChart?.addEventListener("dragover",ev =>ev.preventDefault())
+divDropGreen?.addEventListener("dragover", (ev) => ev.preventDefault())
+divDropRed?.addEventListener("dragover", (ev) => ev.preventDefault())
+divDropBlue?.addEventListener("dragover", (ev) => ev.preventDefault())
+divDropChart?.addEventListener("dragover", (ev) => ev.preventDefault())
 
-document.getElementById("inputSliderGreen")?.addEventListener("change",ev =>{
-    if(ev.srcElement){
+document.getElementById("inputSliderGreen")?.addEventListener("change", (ev) => {
+    if (ev.srcElement) {
         greenHowl.volume(Number((<HTMLInputElement>ev.srcElement).value))
     }
 })
 
-document.getElementById("inputSliderRed")?.addEventListener("change",ev =>{
-    if(ev.srcElement){
+document.getElementById("inputSliderRed")?.addEventListener("change", (ev) => {
+    if (ev.srcElement) {
         redHowl.volume(Number((<HTMLInputElement>ev.srcElement).value))
     }
 })
 
-document.getElementById("inputSliderBlue")?.addEventListener("change",ev =>{
-    if(ev.srcElement){
+document.getElementById("inputSliderBlue")?.addEventListener("change", (ev) => {
+    if (ev.srcElement) {
         blueHowl.volume(Number((<HTMLInputElement>ev.srcElement).value))
     }
 })
 
-document.getElementById("inputOffsetGreen")?.addEventListener("change",ev =>{
-    if(ev.srcElement){
+document.getElementById("inputOffsetGreen")?.addEventListener("change", (ev) => {
+    if (ev.srcElement) {
         greenOffset = Number((<HTMLInputElement>ev.srcElement).value)
     }
 })
 
-document.getElementById("inputOffsetRed")?.addEventListener("change",ev =>{
-    if(ev.srcElement){
+document.getElementById("inputOffsetRed")?.addEventListener("change", (ev) => {
+    if (ev.srcElement) {
         redOffset = Number((<HTMLInputElement>ev.srcElement).value)
     }
 })
 
-document.getElementById("inputOffsetBlue")?.addEventListener("change",ev =>{
-    if(ev.srcElement){
+document.getElementById("inputOffsetBlue")?.addEventListener("change", (ev) => {
+    if (ev.srcElement) {
         blueOffset = Number((<HTMLInputElement>ev.srcElement).value)
     }
 })
@@ -451,7 +451,7 @@ window.addEventListener("dblclick", (ev) => ev.preventDefault())
 window.addEventListener("contextmenu", (ev) => ev.preventDefault())
 
 window.addEventListener("wheel", (delta) => {
-    noteRender.moveView(-delta.deltaY,notes,songBpm)
+    noteRender.moveView(-delta.deltaY, notes, songBpm)
     updateGUI()
 })
 window.addEventListener("keyup", (ev) => keyPress(ev))
@@ -495,9 +495,9 @@ function init() {
 init()
 
 app.ticker.add(() => {
-    if(greenHowl.playing()){
+    if (greenHowl.playing()) {
         let time = greenHowl.seek()
-        if(typeof time === "number") noteRender.setViewOffset(time / (240 / songBpm))
+        if (typeof time === "number") noteRender.setViewOffset(time / (240 / songBpm))
     } else {
         greenHowl.seek(noteRender.time * (240 / songBpm) + greenOffset)
         redHowl.seek(noteRender.time * (240 / songBpm) + redOffset)
@@ -520,7 +520,7 @@ function keyPress(ev: KeyboardEvent) {
         if (ev.key == "Home") {
             noteRender.setViewOffset(0)
         } else if (ev.key == " ") {
-            if(greenHowl.playing() || redHowl.playing() || blueHowl.playing()){
+            if (greenHowl.playing() || redHowl.playing() || blueHowl.playing()) {
                 greenHowl.stop()
                 redHowl.stop()
                 blueHowl.stop()
@@ -680,9 +680,9 @@ function updateGUI() {
     inputNoteExtra.value = noteManager.selectedNote.extra.toString()
 
     //audio offsets
-    greenOffset = Math.min(greenOffset,0)
-    redOffset = Math.min(redOffset,0)
-    blueOffset = Math.min(blueOffset,0)
+    greenOffset = Math.min(greenOffset, 0)
+    redOffset = Math.min(redOffset, 0)
+    blueOffset = Math.min(blueOffset, 0)
 
     inputOffsetGreen.value = greenOffset.toString()
     inputOffsetRed.value = redOffset.toString()
